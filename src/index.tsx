@@ -1,20 +1,20 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
-import firebase from 'firebase/app';
+import React from "react";
+import ReactDOM from "react-dom";
+import "./index.css";
+import App from "./App";
+import reportWebVitals from "./reportWebVitals";
+import firebase from "firebase/app";
 import "firebase/auth";
-import "firebase/firestore"
+import "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDi2xnCbASukYXnepa8_8FPEd-t9XlQIV0",
-  authDomain: "jimmysocial-e961a.firebaseapp.com",
-  databaseURL: "https://jimmysocial-e961a.firebaseio.com",
-  projectId: "jimmysocial-e961a",
-  storageBucket: "jimmysocial-e961a.appspot.com",
-  messagingSenderId: "1001720930483",
-  appId: "1:1001720930483:web:5399f9d4cb5e4ec3fe50c6"
+  apiKey: process.env.REACT_APP_API_KEY,
+  authDomain: process.env.REACT_APP_AUTHDOMAIN,
+  databaseURL: process.env.REACT_APP_BASEURL,
+  projectId: process.env.REACT_APP_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_STORAGEBUCKET,
+  messagingSenderId: process.env.REACT_APP_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_APP_ID,
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -23,7 +23,7 @@ ReactDOM.render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,
-  document.getElementById('root')
+  document.getElementById("root")
 );
 
 // If you want to start measuring performance in your app, pass a function
