@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 import AppBar from "@material-ui/core/AppBar";
 import Divider from "@material-ui/core/Divider";
@@ -21,12 +22,10 @@ import {
 } from "@material-ui/core/styles";
 
 import AccountCircle from "@material-ui/icons/AccountCircle";
-import CreateIcon from "@material-ui/icons/Create";
-import HomeIcon from "@material-ui/icons/Home";
 import MenuIcon from "@material-ui/icons/Menu";
-import SettingsIcon from "@material-ui/icons/Settings";
 
 import firebase from "firebase";
+import Pages from "./Pages";
 
 const drawerWidth = 240;
 
@@ -112,18 +111,6 @@ function AccountMenu() {
   );
 }
 
-interface SidebarItem {
-  text: string;
-  icon?: React.ReactNode;
-  route: string;
-}
-
-const sidebarItems: SidebarItem[] = [
-  { text: "Home", icon: <HomeIcon />, route: "/" },
-  { text: "Posts", icon: <CreateIcon />, route: "/" },
-  { text: "Settings", icon: <SettingsIcon />, route: "/settings" },
-];
-
 export default function ResponsiveDrawer() {
   const classes = useStyles();
   const theme = useTheme();
@@ -138,10 +125,10 @@ export default function ResponsiveDrawer() {
       <div className={classes.toolbar} />
       <Divider />
       <List>
-        {sidebarItems.map((item) => (
-          <ListItem button key={item.text}>
+        {Pages.map((item) => (
+          <ListItem button component={Link} to={item.path}>
             <ListItemIcon>{item.icon}</ListItemIcon>
-            <ListItemText primary={item.text} />
+            <ListItemText primary={item.name} />
           </ListItem>
         ))}
       </List>

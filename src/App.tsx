@@ -9,7 +9,6 @@ import {
   createMuiTheme,
   ThemeProvider,
   makeStyles,
-  useTheme,
   Theme,
   createStyles,
 } from "@material-ui/core/styles";
@@ -18,8 +17,9 @@ import CssBaseline from "@material-ui/core/CssBaseline";
 import blue from "@material-ui/core/colors/blue";
 
 import Sidebar from "./components/Sidebar";
-import { Avatar, Box, Container, Link } from "@material-ui/core";
+import { Avatar, Box, Container } from "@material-ui/core";
 import LockOutlined from "@material-ui/icons/LockOutlined";
+import Pages from "./components/Pages";
 
 const drawerWidth = 240;
 
@@ -81,7 +81,7 @@ function App() {
 
   const classes = useStyles();
 
-  if (isSignedIn == false) {
+  if (isSignedIn === false) {
     return (
       <ThemeProvider theme={theme}>
         <Container component="main" maxWidth="xs">
@@ -118,9 +118,11 @@ function App() {
           <Sidebar />
           <main className={classes.content}>
             <div className={classes.toolbar} />
-            <Typography variant="h4">
-              Welcome, {firebase.auth().currentUser?.displayName}!
-            </Typography>
+            <Switch>
+              {Pages.map((item) => (
+                <Route {...item.routeProps} path={item.path} />
+              ))}
+            </Switch>
           </main>
         </div>
       </ThemeProvider>
