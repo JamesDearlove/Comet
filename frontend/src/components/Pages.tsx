@@ -4,10 +4,12 @@ import { RouteProps } from "react-router-dom";
 import CreateIcon from "@material-ui/icons/Create";
 import HomeIcon from "@material-ui/icons/Home";
 import SettingsIcon from "@material-ui/icons/Settings";
+import DeveloperModeIcon from "@material-ui/icons/DeveloperMode";
 
 import HomePage from "./HomePage";
 import PostsPage from "./PostsPage";
 import SettingsPage from "./SettingsPage";
+import TestPage from "./TestPage";
 
 interface IPage {
   name: string;
@@ -40,6 +42,14 @@ const Pages: IPage[] = [
     path: "/settings",
     routeProps: {
       component: SettingsPage,
+    },
+  },
+  {
+    name: "Testing",
+    icon: <DeveloperModeIcon />,
+    path: "/testing",
+    routeProps: {
+      component: TestPage,
     },
   },
 ];

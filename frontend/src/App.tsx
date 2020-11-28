@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 
 import firebase from "firebase";
 import "firebase/auth";
+import "firebase/functions";
 import StyledFirebaseAuth from "react-firebaseui/StyledFirebaseAuth";
 
 import {
@@ -78,6 +79,8 @@ function App() {
       setIsSignedIn(!!user);
     });
   });
+
+  // firebase.functions().useEmulator("localhost", 5001);
 
   const classes = useStyles();
 
