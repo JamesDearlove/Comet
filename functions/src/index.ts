@@ -71,7 +71,8 @@ export const makeFacebookPost = functions.https.onCall(
   async (data, context) => {
     const postID = data.postID;
 
-    const postData = await admin.firestore().doc(`posts/${postID}`).get();
+    const postDataRef = admin.firestore().doc(`posts/${postID}`);
+    const postData = await postDataRef.get();
 
     if (!postData) {
       throw new functions.https.HttpsError("not-found", "Post not found.");
@@ -80,10 +81,15 @@ export const makeFacebookPost = functions.https.onCall(
     const creationResult = await axios.post(
       "https://graph.facebook.com/v9.0/me/feed",
       {
-        access_token: postData.data()!.facebookToken,
-        message: postData.data()!.content,
+        access_token: postData.data()?.facebook.token,
+        message: postData.data()?.content,
+        fields: "permalink_url",
       }
     );
+
+    if (creationResult.status == 200) {
+      await postDataRef.update({ postedOn: new Date() })
+    }
 
     return creationResult.data;
   }
