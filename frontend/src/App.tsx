@@ -24,6 +24,8 @@ import Typography from "@material-ui/core/Typography";
 
 import LockOutlined from "@material-ui/icons/LockOutlined";
 
+import { SnackbarProvider } from "notistack";
+
 import Sidebar from "./components/Sidebar";
 import Pages from "./components/Pages";
 
@@ -123,39 +125,41 @@ function App() {
 
   return (
     <ThemeProvider theme={theme}>
-      {isSignedIn ? (
-        <Router>
-          <div className={classes.root}>
-            <CssBaseline />
-            <Sidebar />
-            <main className={classes.content}>
-              <div className={classes.toolbar} />
-              <Switch>
-                {Pages.map((item) => (
-                  <Route {...item.routeProps} path={item.path} />
-                ))}
-                <Route>
-                  <Typography variant="h4">You seem lost</Typography>
-                  {/* <br /> */}
-                  <Typography>
-                    We are not sure how you navigated here, but let us help you
-                    get back to the right path.
-                  </Typography>
-                  <br />
-                  <Typography>
-                    <Link to="/">Go home</Link>
-                  </Typography>
-                  <Typography>
-                    <Link to="/posts">View your posts</Link>
-                  </Typography>
-                </Route>
-              </Switch>
-            </main>
-          </div>
-        </Router>
-      ) : (
-        <LoginScreen />
-      )}
+      <SnackbarProvider maxSnack={3}>
+        {isSignedIn ? (
+          <Router>
+            <div className={classes.root}>
+              <CssBaseline />
+              <Sidebar />
+              <main className={classes.content}>
+                <div className={classes.toolbar} />
+                <Switch>
+                  {Pages.map((item) => (
+                    <Route {...item.routeProps} path={item.path} />
+                  ))}
+                  <Route>
+                    <Typography variant="h4">You seem lost</Typography>
+                    {/* <br /> */}
+                    <Typography>
+                      We are not sure how you navigated here, but let us help
+                      you get back to the right path.
+                    </Typography>
+                    <br />
+                    <Typography>
+                      <Link to="/">Go home</Link>
+                    </Typography>
+                    <Typography>
+                      <Link to="/posts">View your posts</Link>
+                    </Typography>
+                  </Route>
+                </Switch>
+              </main>
+            </div>
+          </Router>
+        ) : (
+          <LoginScreen />
+        )}
+      </SnackbarProvider>
     </ThemeProvider>
   );
 }

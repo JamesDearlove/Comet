@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useHistory, useParams } from "react-router-dom";
 
 import { createStyles, Theme, makeStyles } from "@material-ui/core/styles";
 import Button from "@material-ui/core/Button";
@@ -12,6 +12,8 @@ import Grid from "@material-ui/core/Grid";
 import LinearProgress from "@material-ui/core/LinearProgress";
 import TextField from "@material-ui/core/TextField";
 import Typography from "@material-ui/core/Typography";
+
+import { useSnackbar } from "notistack";
 
 import firebase from "firebase";
 
@@ -36,27 +38,57 @@ const useStyles = makeStyles((theme: Theme) =>
 
 const EditPost = () => {
   const classes = useStyles();
-
-  let { postID } = useParams<IPostParams>();
+  const history = useHistory();
+  const { postID } = useParams<IPostParams>();
+  const { enqueueSnackbar } = useSnackbar();
 
   const [post, setPost] = useState<firebase.firestore.DocumentData>();
+  const [postLoadError, setPostLoadError] = useState(false);
 
-  const postsRef = firebase.firestore().collection("posts");
+  const postsRef = firebase.firestore().collection("posts").doc(postID);
 
-  const [postStatus, setPostStatus] = useState();
+  const [disabled, setDisabled] = useState(false);
 
   const createPost = () => {
     var facebookPost = firebase.functions().httpsCallable("makeFacebookPost");
-    facebookPost({ postID: postID }).then(function (result) {
-      setPostStatus(result.data.permalink_url);
-    });
+    facebookPost({ postID: postID })
+      .then((result) => {
+        enqueueSnackbar(
+          <a target="_blank" href={result.data.permalink_url}>
+            Posted to Facebook
+          </a>,
+          { variant: "success" }
+        );
+      })
+      .catch((result) =>
+        enqueueSnackbar(`Failed to post to Facebook, ${result}`, {
+          variant: "error",
+        })
+      );
+  };
+
+  const cancelClick = () => {
+    history.push("/posts");
+  };
+
+  const saveClick = async () => {
+    await postsRef.update({ ...post });
+    history.push("/posts");
+    enqueueSnackbar("Post saved", { variant: "success" });
+    // Send notification that it was saved
+  };
+
+  const postNowClick = async () => {
+    setDisabled(true);
+    await postsRef.update({ ...post });
+    createPost();
   };
 
   const loadPost = async () => {
     postsRef
-      .doc(postID)
       .get()
-      .then((doc) => setPost(doc.data()));
+      .then((doc) => setPost(doc.data()))
+      .catch(() => setPostLoadError(true));
   };
 
   useEffect(() => {
@@ -66,7 +98,11 @@ const EditPost = () => {
   return (
     <>
       {!post ? (
-        <LinearProgress />
+        !postLoadError ? (
+          <LinearProgress />
+        ) : (
+          <Typography>Not found</Typography>
+        )
       ) : (
         <>
           <Typography variant="h4">
@@ -136,6 +172,8 @@ const EditPost = () => {
                 variant="contained"
                 className={classes.button}
                 endIcon={<SendIcon />}
+                onClick={postNowClick}
+                disabled={disabled}
               >
                 Post Now
               </Button>
@@ -146,6 +184,7 @@ const EditPost = () => {
                   variant="contained"
                   className={classes.button}
                   endIcon={<CancelIcon />}
+                  onClick={cancelClick}
                 >
                   Cancel
                 </Button>
@@ -154,6 +193,7 @@ const EditPost = () => {
                   color="primary"
                   className={classes.button}
                   endIcon={<SaveIcon />}
+                  onClick={saveClick}
                 >
                   Save Draft
                 </Button>

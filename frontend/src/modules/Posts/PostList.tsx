@@ -11,6 +11,7 @@ import Typography from "@material-ui/core/Typography";
 import firebase from "firebase";
 
 import AddIcon from "@material-ui/icons/Add";
+import { LinearProgress } from "@material-ui/core";
 
 interface IPostItem {
   id: string;
@@ -48,7 +49,7 @@ const PostItem = (props: { id: string; data: any }) => {
 const PostList = () => {
   const classes = useStyles();
 
-  const [postList, setPostList] = useState<IPostItem[]>([]);
+  const [postList, setPostList] = useState<IPostItem[]>();
 
   const userUid = firebase.auth().currentUser?.uid;
   const postsRef = firebase.firestore().collection("posts");
@@ -71,11 +72,15 @@ const PostList = () => {
   return (
     <>
       <Typography variant="h4">Posts</Typography>
-      <List className={classes.list}>
-        {postList?.map((item) => (
-          <PostItem {...item} />
-        ))}
-      </List>
+      {!postList ? (
+        <LinearProgress />
+      ) : (
+        <List className={classes.list}>
+          {postList?.map((item) => (
+            <PostItem {...item} />
+          ))}
+        </List>
+      )}
       <Fab className={classes.fab} color="primary" aria-label="add">
         <AddIcon />
       </Fab>
