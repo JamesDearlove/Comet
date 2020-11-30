@@ -7,7 +7,7 @@ import SettingsIcon from "@material-ui/icons/Settings";
 import DeveloperModeIcon from "@material-ui/icons/DeveloperMode";
 
 import HomePage from "./HomePage";
-import PostsPage from "./PostsPage";
+import PostsPage from "../modules/Posts";
 import SettingsPage from "./SettingsPage";
 import TestPage from "./TestPage";
 
