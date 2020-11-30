@@ -8,7 +8,7 @@ import DeveloperModeIcon from "@material-ui/icons/DeveloperMode";
 
 import HomePage from "./HomePage";
 import PostsPage from "../modules/Posts";
-import SettingsPage from "./SettingsPage";
+import SettingsPage from "../modules/Settings";
 import TestPage from "./TestPage";
 
 interface IPage {
