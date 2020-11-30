@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
 
 import firebase from "firebase";
 import "firebase/auth";
@@ -13,13 +13,18 @@ import {
   Theme,
   createStyles,
 } from "@material-ui/core/styles";
-import Typography from "@material-ui/core/Typography";
-import CssBaseline from "@material-ui/core/CssBaseline";
+import Avatar from "@material-ui/core/Avatar";
 import blue from "@material-ui/core/colors/blue";
+import red from "@material-ui/core/colors/red";
+import Box from "@material-ui/core/Box";
+import CircularProgress from "@material-ui/core/CircularProgress";
+import Container from "@material-ui/core/Container";
+import CssBaseline from "@material-ui/core/CssBaseline";
+import Typography from "@material-ui/core/Typography";
+
+import LockOutlined from "@material-ui/icons/LockOutlined";
 
 import Sidebar from "./components/Sidebar";
-import { Avatar, Box, Container } from "@material-ui/core";
-import LockOutlined from "@material-ui/icons/LockOutlined";
 import Pages from "./components/Pages";
 
 const drawerWidth = 240;
@@ -27,7 +32,7 @@ const drawerWidth = 240;
 const theme = createMuiTheme({
   palette: {
     primary: blue,
-    secondary: blue,
+    secondary: red,
   },
 });
 
@@ -72,11 +77,13 @@ function App() {
     },
   };
 
+  const [loadingAuth, setLoadingAuth] = useState(true);
   const [isSignedIn, setIsSignedIn] = useState(false);
 
   useEffect(() => {
     firebase.auth().onAuthStateChanged((user) => {
       setIsSignedIn(!!user);
+      setLoadingAuth(false);
     });
   });
 
@@ -84,52 +91,72 @@ function App() {
 
   const classes = useStyles();
 
-  if (isSignedIn === false) {
-    return (
-      <ThemeProvider theme={theme}>
-        <Container component="main" maxWidth="xs">
-          <CssBaseline />
-          <div className={classes.signInPaper}>
-            <Avatar className={classes.signInAvatar}>
-              <LockOutlined />
-            </Avatar>
-            <Typography component="h1" variant="h5">
-              JimmySocial
-            </Typography>
-            <StyledFirebaseAuth
-              uiConfig={uiConfig}
-              firebaseAuth={firebase.auth()}
-              className={classes.signInOptions}
-            />
-          </div>
-          <Box mt={8}>
-            <Typography variant="body2" color="textSecondary" align="center">
-              {"Copyright © James Dearlove "}
-              {new Date().getFullYear()}
-              {"."}
-            </Typography>
-          </Box>
-        </Container>
-      </ThemeProvider>
-    );
-  }
+  const LoginScreen = () => (
+    <Container component="main" maxWidth="xs">
+      <CssBaseline />
+      <div className={classes.signInPaper}>
+        <Avatar className={classes.signInAvatar}>
+          <LockOutlined />
+        </Avatar>
+        <Typography component="h1" variant="h5">
+          JimmySocial
+        </Typography>
+        {loadingAuth ? (
+          <CircularProgress className={classes.signInOptions} />
+        ) : (
+          <StyledFirebaseAuth
+            uiConfig={uiConfig}
+            firebaseAuth={firebase.auth()}
+            className={classes.signInOptions}
+          />
+        )}
+      </div>
+      <Box mt={8}>
+        <Typography variant="body2" color="textSecondary" align="center">
+          {"Copyright © James Dearlove "}
+          {new Date().getFullYear()}
+          {"."}
+        </Typography>
+      </Box>
+    </Container>
+  );
+
   return (
-    <Router>
-      <ThemeProvider theme={theme}>
-        <div className={classes.root}>
-          <CssBaseline />
-          <Sidebar />
-          <main className={classes.content}>
-            <div className={classes.toolbar} />
-            <Switch>
-              {Pages.map((item) => (
-                <Route {...item.routeProps} path={item.path} />
-              ))}
-            </Switch>
-          </main>
-        </div>
-      </ThemeProvider>
-    </Router>
+    <ThemeProvider theme={theme}>
+      {isSignedIn ? (
+        <Router>
+          <div className={classes.root}>
+            <CssBaseline />
+            <Sidebar />
+            <main className={classes.content}>
+              <div className={classes.toolbar} />
+              <Switch>
+                {Pages.map((item) => (
+                  <Route {...item.routeProps} path={item.path} />
+                ))}
+                <Route>
+                  <Typography variant="h4">You seem lost</Typography>
+                  {/* <br /> */}
+                  <Typography>
+                    We are not sure how you navigated here, but let us help you
+                    get back to the right path.
+                  </Typography>
+                  <br />
+                  <Typography>
+                    <Link to="/">Go home</Link>
+                  </Typography>
+                  <Typography>
+                    <Link to="/posts">View your posts</Link>
+                  </Typography>
+                </Route>
+              </Switch>
+            </main>
+          </div>
+        </Router>
+      ) : (
+        <LoginScreen />
+      )}
+    </ThemeProvider>
   );
 }
 
