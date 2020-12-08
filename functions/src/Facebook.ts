@@ -36,14 +36,31 @@ export const userFacebookLogin = functions.https.onCall(
       } else {
         throw new functions.https.HttpsError(
           "permission-denied",
-          `Recieved error ${tokenRequest.data.error.code}: ${tokenRequest.data.error.message}`
+          `Recieved error when retrieving long-lived token. ${tokenRequest.data.error.code}: ${tokenRequest.data.error.message}`
         );
       }
     } else {
+      const userDataRequest = await instance.get("me", {
+        params: {
+          access_token: tokenRequest.data.access_token,
+        },
+      });
+
+      if (!userDataRequest || !userDataRequest.data.name) {
+        throw new functions.https.HttpsError(
+          "internal",
+          "The long-lived token given by Facebook was not valid."
+        );
+      }
+
       await admin
         .firestore()
         .doc(`users/${context.auth?.uid}`)
-        .update({ facebookUserToken: tokenRequest.data.access_token });
+        .update({
+          facebookUserName: userDataRequest.data.name,
+          facebookUserID: userDataRequest.data.id,
+          facebookUserToken: tokenRequest.data.access_token,
+        });
     }
 
     return tokenRequest.data.access_token;
@@ -73,18 +90,16 @@ export const publishFacebookPost = functions.https.onCall(
       throw new functions.https.HttpsError("not-found", "Post not found.");
     }
 
-    const creationResult = await instance.post(
-      "me/feed",
-      {
-        access_token: postData.data()?.facebook.token,
-        message: postData.data()?.content,
-        fields: "permalink_url",
-      }
-    );
+    const creationResult = await instance.post("me/feed", {
+      access_token: postData.data()?.facebook.token,
+      message: postData.data()?.content,
+      fields: "permalink_url",
+    });
 
     if (creationResult.status == 200) {
       await postDataRef.update({ postedOn: new Date() });
     }
 
     return creationResult.data;
-});
+  }
+);

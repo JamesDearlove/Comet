@@ -112,22 +112,28 @@ const FacebookSetup = () => {
     });
   };
 
-  const responseFacebook = (response: any) => {
-    console.log(response);
+  // Handle the Facebook login. If successful, send off short-lived token
+  // to the server to be upgraded to a long-lived token.
+  const callbackResponse = (response: any) => {
     if (!response || response.status === "unknown") {
-      setStatus("Failed to get token");
+      setStatus(
+        "We didn't receive a successful login from Facebook. Please try again."
+      );
     } else {
-      setStatus(`Hello, ${response.name}. Click next to continue`);
-      // firebase.firestore().doc(`users/${userUid}`).set(
-      //   {
-      //     facebookUserID: response.id,
-      //     facebookUserName: response.name,
-      //   },
-      //   { merge: true }
-      // );
-      setUserName(response.name);
-      setUserId(response.id);
-      // getPageToken(response.accessToken);
+      const setupUserLogin = firebase
+        .functions()
+        .httpsCallable("userFacebookLogin");
+      setupUserLogin({ userToken: response.accessToken })
+        .then(() => {
+          setStatus(`Hello, ${response.name}. Click next to continue`);
+          setUserName(response.name);
+          setUserId(response.id);
+        })
+        .catch(() =>
+          setStatus(
+            "Sorry, we were unable to authenticate with your Facebook account. Please try again."
+          )
+        );
     }
   };
 
@@ -150,7 +156,7 @@ const FacebookSetup = () => {
               appId="224158632347699"
               fields="name,email,picture"
               scope="pages_show_list,pages_read_engagement,pages_read_user_content,pages_manage_posts,pages_manage_engagement"
-              callback={responseFacebook}
+              callback={callbackResponse}
             />
             <Typography>{status}</Typography>
             <div className={classes.actionsContainer}>
