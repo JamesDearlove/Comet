@@ -56,7 +56,7 @@ export const userFacebookLogin = functions.https.onCall(
       await admin
         .firestore()
         .doc(`users/${context.auth?.uid}`)
-        .update({
+        .set({
           facebookUserName: userDataRequest.data.name,
           facebookUserID: userDataRequest.data.id,
           facebookUserToken: tokenRequest.data.access_token,
@@ -71,12 +71,84 @@ export const userFacebookLogout = functions.https.onCall((data, context) => {
   throw new functions.https.HttpsError("unimplemented", "Not implemented.");
 });
 
-export const getUserFacebookPages = functions.https.onCall((data, context) => {
-  throw new functions.https.HttpsError("unimplemented", "Not implemented.");
+// TODO: Graceful handling of errors
+export const getUserFacebookPages = functions.https.onCall(
+  async (data, context) => {
+  const userData = await admin.firestore().doc(`users/${context.auth?.uid}`).get()
+  const userToken = userData.data()?.facebookUserToken;
+
+  const pageListRequest = await instance.get("me/accounts", {
+    params: {
+      access_token: userToken,
+      fields: "id,name",
+      // fields: "access_token,id,name",
+    }
+  })
+
+  // if (!pageListRequest.data.error) {
+  //   throw new functions.https.HttpsError(
+  //     "internal",
+  //     "An unkown error occurred with the Facebook API."
+  //   );
+  // }
+
+  return pageListRequest.data.data;
+  
 });
 
-export const setUserFacebookPage = functions.https.onCall((data, context) => {
-  throw new functions.https.HttpsError("unimplemented", "Not implemented.");
+// TODO: Graceful handling of errors
+export const setUserFacebookPage = functions.https.onCall(
+  async (data, context) => {
+
+  const pageID = data.pageID;
+
+  const userData = await admin.firestore().doc(`users/${context.auth?.uid}`).get()
+  const userToken = userData.data()?.facebookUserToken;
+
+  const tokenRequest = await instance.get(`${pageID}/`, {
+    params: {
+      access_token: userToken,
+      fields: "access_token",
+    }
+  })
+
+  if (!tokenRequest.data.access_token) {
+    if (!tokenRequest.data.error) {
+      throw new functions.https.HttpsError(
+        "internal",
+        "An unkown error occurred with the Facebook API."
+      );
+    } else {
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        `Recieved error when retrieving page token. ${tokenRequest.data.error.code}: ${tokenRequest.data.error.message}`
+      );
+    }
+  } else {
+    const userDataRequest = await instance.get("me", {
+      params: {
+        access_token: tokenRequest.data.access_token,
+      },
+    });
+
+    if (!userDataRequest || !userDataRequest.data.name) {
+      throw new functions.https.HttpsError(
+        "internal",
+        "The page token given by Facebook was not valid."
+      );
+    }
+
+    await admin
+      .firestore()
+      .doc(`users/${context.auth?.uid}`)
+      .update({
+        facebookPageName: userDataRequest.data.name,
+        facebookPageID: userDataRequest.data.id,
+        facebookPageToken: tokenRequest.data.access_token,
+      });
+  }
+
+  return "Success"
 });
 
 export const publishFacebookPost = functions.https.onCall(

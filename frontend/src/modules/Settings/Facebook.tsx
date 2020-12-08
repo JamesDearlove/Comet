@@ -4,17 +4,13 @@ import Typography from "@material-ui/core/Typography";
 
 import firebase from "firebase";
 import FacebookLogin from "react-facebook-login";
-import axios from "axios";
 
 import CheckIcon from "@material-ui/icons/Check";
 import InfoIcon from "@material-ui/icons/Info";
 
 import Button from "@material-ui/core/Button";
-import TextField from "@material-ui/core/TextField";
 import Dialog from "@material-ui/core/Dialog";
-import DialogActions from "@material-ui/core/DialogActions";
 import DialogContent from "@material-ui/core/DialogContent";
-import DialogContentText from "@material-ui/core/DialogContentText";
 import DialogTitle from "@material-ui/core/DialogTitle";
 
 import StepContent from "@material-ui/core/StepContent";
@@ -30,7 +26,6 @@ import Radio from "@material-ui/core/Radio";
 import RadioGroup from "@material-ui/core/RadioGroup";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import FormControl from "@material-ui/core/FormControl";
-import FormLabel from "@material-ui/core/FormLabel";
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -50,15 +45,12 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 );
 
+// TODO: Clean up this mess
+
 const FacebookSetup = () => {
   const classes = useStyles();
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [activeStep, setActiveStep] = React.useState(0);
-  const [stepComplete, setStepComplete] = React.useState({
-    0: false,
-    1: false,
-    2: true,
-  });
 
   const handleClickOpen = () => {
     setDialogOpen(true);
@@ -67,48 +59,33 @@ const FacebookSetup = () => {
 
   const handleClose = () => {
     setDialogOpen(false);
+    setUserName("");
+    setUserId("");
+    setSelectedPage("");
+    setStatus("");
   };
 
   const userUid = firebase.auth().currentUser?.uid;
   const [status, setStatus] = useState("");
-  const [pages, setPages] = useState([]);
+  const [pages, setPages] = useState<any[]>([]);
   const [userData, setUserData] = useState<firebase.firestore.DocumentData>();
   const [userId, setUserId] = useState("");
   const [userName, setUserName] = useState("");
+  const [selectedPage, setSelectedPage] = useState("");
 
-  const [setup, setSetup] = useState(false);
-
-  const savePageToken = (page: any) => {
-    firebase.firestore().doc(`users/${userUid}`).update({
-      facebookPageName: page.name,
-      facebookPageID: page.id,
-      facebookPageToken: page.access_token,
-    });
-  };
-
-  const getUserPages = (userLongToken: string) => {
-    axios({
-      method: "get",
-      url: `https://graph.facebook.com/v9.0/${userId}/accounts`,
-      params: {
-        access_token: userLongToken,
-        fields: "name,id,access_token",
-      },
-    }).then((result) => {
-      const pages = result.data.data;
-      if (pages.length === 1) {
-        savePageToken(pages[0]);
-      }
-      setPages(result.data.data);
-    });
-  };
-
-  const getPageToken = (userShortToken: string) => {
-    const longTokenFunc = firebase
+  const getUserPages = async () => {
+    const userPages = await firebase
       .functions()
-      .httpsCallable("updateFacebookUserToken");
-    longTokenFunc({ userToken: userShortToken }).then((result) => {
-      getUserPages(result.data);
+      .httpsCallable("getUserFacebookPages")();
+    setPages(userPages.data);
+  };
+
+  const setUserPage = async () => {
+    const setUserPage = await firebase
+      .functions()
+      .httpsCallable("setUserFacebookPage");
+    setUserPage({ pageID: selectedPage }).then((result) => {
+      handleClose();
     });
   };
 
@@ -128,6 +105,7 @@ const FacebookSetup = () => {
           setStatus(`Hello, ${response.name}. Click next to continue`);
           setUserName(response.name);
           setUserId(response.id);
+          getUserPages();
         })
         .catch(() =>
           setStatus(
@@ -139,7 +117,11 @@ const FacebookSetup = () => {
 
   const steps = [
     `Facebook authorisation ${activeStep > 0 ? `- ${userName}` : ""}`,
-    "Choose post location",
+    `Choose post location ${
+      activeStep > 1
+        ? `- ${pages.find((x) => x.id === selectedPage)?.name}`
+        : ""
+    }`,
     "Confirm connection",
   ];
 
@@ -184,14 +166,19 @@ const FacebookSetup = () => {
               Select where you would like JimmySocial to post on Facebook.
             </Typography>
             <FormControl component="fieldset">
-              {/* <RadioGroup aria-label="gender" name="gender1" value={value} onChange={handleChange}> */}
-              <RadioGroup aria-label="facebookFeed" name="feed1" value="page">
-                {/* <FormControlLabel value="user" control={<Radio />} label={userName} disabled/> */}
-                <FormControlLabel
-                  value="page"
-                  control={<Radio />}
-                  label="(Page name to go here)"
-                />
+              <RadioGroup
+                aria-label="facebookFeed"
+                name="feed1"
+                value={selectedPage}
+                onChange={(e) => setSelectedPage(e.target.value)}
+              >
+                {pages.map((item) => (
+                  <FormControlLabel
+                    value={item.id}
+                    control={<Radio />}
+                    label={item.name}
+                  />
+                ))}
               </RadioGroup>
             </FormControl>
             <div className={classes.actionsContainer}>
@@ -200,7 +187,7 @@ const FacebookSetup = () => {
                   Back
                 </Button>
                 <Button
-                  disabled={!userId}
+                  disabled={!selectedPage || selectedPage === ""}
                   variant="contained"
                   color="primary"
                   onClick={handleNext}
@@ -221,17 +208,19 @@ const FacebookSetup = () => {
             </Typography>
             <br />
             <Typography>Authorised Facebook user: {userName}</Typography>
-            <Typography>Linked to Facebook page: (Page name here)</Typography>
+            <Typography>
+              Linked to Facebook page:{" "}
+              {pages.find((x) => x.id === selectedPage)?.name}
+            </Typography>
             <div className={classes.actionsContainer}>
               <div>
                 <Button onClick={handleBack} className={classes.button}>
                   Back
                 </Button>
                 <Button
-                  disabled={!userId}
                   variant="contained"
                   color="primary"
-                  onClick={handleNext}
+                  onClick={handleFinish}
                   className={classes.button}
                 >
                   Finish
@@ -243,6 +232,11 @@ const FacebookSetup = () => {
       default:
         return "Something is not right here.";
     }
+  };
+
+  const handleFinish = () => {
+    handleNext();
+    setUserPage();
   };
 
   const handleNext = () => {
@@ -284,9 +278,6 @@ const FacebookSetup = () => {
                 <CircularProgress />
                 Saving
               </Typography>
-              <Button onClick={handleClose} className={classes.button}>
-                Close
-              </Button>
             </Paper>
           )}
         </DialogContent>
@@ -297,46 +288,9 @@ const FacebookSetup = () => {
 
 const FacebookSettings = () => {
   const userUid = firebase.auth().currentUser?.uid;
-  const [status, setStatus] = useState("Loading data");
-  const [pages, setPages] = useState([]);
   const [userData, setUserData] = useState<firebase.firestore.DocumentData>();
-  const [userId, setUserId] = useState("");
 
   const [setup, setSetup] = useState(false);
-
-  const savePageToken = (page: any) => {
-    firebase.firestore().doc(`users/${userUid}`).update({
-      facebookPageName: page.name,
-      facebookPageID: page.id,
-      facebookPageToken: page.access_token,
-    });
-  };
-
-  const getUserPages = (userLongToken: string) => {
-    axios({
-      method: "get",
-      url: `https://graph.facebook.com/v9.0/${userId}/accounts`,
-      params: {
-        access_token: userLongToken,
-        fields: "name,id,access_token",
-      },
-    }).then((result) => {
-      const pages = result.data.data;
-      if (pages.length === 1) {
-        savePageToken(pages[0]);
-      }
-      setPages(result.data.data);
-    });
-  };
-
-  const getPageToken = (userShortToken: string) => {
-    const longTokenFunc = firebase
-      .functions()
-      .httpsCallable("updateFacebookUserToken");
-    longTokenFunc({ userToken: userShortToken }).then((result) => {
-      getUserPages(result.data);
-    });
-  };
 
   useEffect(() => {
     firebase
@@ -346,16 +300,6 @@ const FacebookSettings = () => {
       .then((data) => {
         const db = data.data();
         setUserData(data.data());
-        if (data.data()?.facebookPageToken) {
-          setStatus(
-            `Authenticated as ${db?.facebookUserName}, connected to Page: ${db?.facebookPageName}.`
-          );
-        } else {
-          setStatus("No token stored.");
-        }
-        if (data.data()?.facebookUserID) {
-          setUserId(data.data()?.facebookUserID);
-        }
         if (
           db?.facebookUserToken &&
           db?.facebookPageToken &&
@@ -366,23 +310,6 @@ const FacebookSettings = () => {
         }
       });
   }, []);
-
-  const responseFacebook = (response: any) => {
-    if (!response || response.status === "unknown") {
-      setStatus("Failed to get token");
-    } else {
-      setStatus(`Authenticated as ${response.name}`);
-      firebase.firestore().doc(`users/${userUid}`).set(
-        {
-          facebookUserID: response.id,
-          facebookUserName: response.name,
-        },
-        { merge: true }
-      );
-      setUserId(response.id);
-      getPageToken(response.accessToken);
-    }
-  };
 
   return (
     <>
@@ -396,7 +323,8 @@ const FacebookSettings = () => {
             </Typography>
           ) : (
             <Typography variant="body1">
-              <InfoIcon /> There might be a problem
+              <InfoIcon /> There might be a problem. Configure Facebook again to
+              restore functionality.
             </Typography>
           )}
           <Typography variant="body1">
@@ -415,26 +343,7 @@ const FacebookSettings = () => {
           </Typography>
         </>
       )}
-      {/* {status} */}
-
-      <FacebookLogin
-        appId="224158632347699"
-        fields="name,email,picture"
-        scope="pages_show_list,pages_read_engagement,pages_read_user_content,pages_manage_posts,pages_manage_engagement"
-        callback={responseFacebook}
-      />
       <FacebookSetup />
-      {/* <button onClick={() => getUserPages(userData?.facebookUserToken)} >Get Pages</button> */}
-      <br />
-      <br />
-      {pages.length > 0 && (
-        <span>
-          Pages:{" "}
-          {pages.map((item: any) => (
-            <span>{item.name}</span>
-          ))}
-        </span>
-      )}
     </>
   );
 };
