@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useHistory, useParams } from "react-router-dom";
+import { useHistory, useParams } from "react-router-dom";
 
 import { createStyles, Theme, makeStyles } from "@material-ui/core/styles";
 import Button from "@material-ui/core/Button";
@@ -56,7 +56,7 @@ const EditPost = () => {
     facebookPost({ postID: postID })
       .then((result) => {
         enqueueSnackbar(
-          <a target="_blank" href={result.data.permalink_url}>
+          <a target="_blank" rel="noreferrer" href={result.data.permalink_url}>
             Posted to Facebook
           </a>,
           { variant: "success" }
