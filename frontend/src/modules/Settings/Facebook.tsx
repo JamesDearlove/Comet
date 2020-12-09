@@ -1,31 +1,28 @@
 import React, { useState, useEffect } from "react";
-
-import Typography from "@material-ui/core/Typography";
-
 import firebase from "firebase";
-import FacebookLogin from "react-facebook-login";
+
+import { makeStyles, Theme, createStyles } from "@material-ui/core";
+import Button from "@material-ui/core/Button";
+import CircularProgress from "@material-ui/core/CircularProgress";
+import Dialog from "@material-ui/core/Dialog";
+import DialogContent from "@material-ui/core/DialogContent";
+import DialogTitle from "@material-ui/core/DialogTitle";
+import FormControl from "@material-ui/core/FormControl";
+import FormControlLabel from "@material-ui/core/FormControlLabel";
+import LinearProgress from "@material-ui/core/LinearProgress";
+import Radio from "@material-ui/core/Radio";
+import RadioGroup from "@material-ui/core/RadioGroup";
+import Step from "@material-ui/core/Step";
+import StepContent from "@material-ui/core/StepContent";
+import StepLabel from "@material-ui/core/StepLabel";
+import Stepper from "@material-ui/core/Stepper";
+import Paper from "@material-ui/core/Paper";
+import Typography from "@material-ui/core/Typography";
 
 import CheckIcon from "@material-ui/icons/Check";
 import InfoIcon from "@material-ui/icons/Info";
 
-import Button from "@material-ui/core/Button";
-import Dialog from "@material-ui/core/Dialog";
-import DialogContent from "@material-ui/core/DialogContent";
-import DialogTitle from "@material-ui/core/DialogTitle";
-
-import StepContent from "@material-ui/core/StepContent";
-import Paper from "@material-ui/core/Paper";
-
-import { makeStyles, Theme, createStyles } from "@material-ui/core/styles";
-import Stepper from "@material-ui/core/Stepper";
-import Step from "@material-ui/core/Step";
-import StepLabel from "@material-ui/core/StepLabel";
-import CircularProgress from "@material-ui/core/CircularProgress";
-
-import Radio from "@material-ui/core/Radio";
-import RadioGroup from "@material-ui/core/RadioGroup";
-import FormControlLabel from "@material-ui/core/FormControlLabel";
-import FormControl from "@material-ui/core/FormControl";
+import FacebookLogin from "react-facebook-login/dist/facebook-login-render-props";
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -42,17 +39,53 @@ const useStyles = makeStyles((theme: Theme) =>
     resetContainer: {
       padding: theme.spacing(3),
     },
+    facebookButton: {},
   })
 );
 
-// TODO: Clean up this mess
+/**
+ * Custom styled Facebook button because I didn't want to add the
+ * Facebook SDK to the project. To be used with the facebook-react-login
+ * package.
+ * @param renderProps.onClick The Click Handler.
+ */
+const FacebookLoginButton = (renderProps: { onClick: () => void }) => {
+  return (
+    <Button
+      style={{
+        backgroundColor: "#1877f2",
+        color: "white",
+        paddingLeft: "1em",
+        paddingRight: "1em",
+        marginTop: "1em",
+        marginBottom: "1em",
+      }}
+      onClick={renderProps.onClick}
+    >
+      Login with Facebook
+    </Button>
+  );
+};
 
-const FacebookSetup = () => {
+/**
+ * Handles the Facebook Onboarding process. Displays a button that allows
+ * you to configure Facebook for the user with a dialog and wizard.
+ * @param props.setupState State to set to true when setup is successful
+ */
+const FacebookSetup = (props: {
+  setupState: React.Dispatch<React.SetStateAction<boolean>>;
+}) => {
   const classes = useStyles();
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [activeStep, setActiveStep] = React.useState(0);
+  const [status, setStatus] = useState("");
+  const [pages, setPages] = useState<any[]>([]);
+  const [userId, setUserId] = useState("");
+  const [userName, setUserName] = useState("");
+  const [selectedPage, setSelectedPage] = useState("");
 
-  const handleClickOpen = () => {
+  // Dialog event handlers
+  const handleOpen = () => {
     setDialogOpen(true);
     setActiveStep(0);
   };
@@ -64,15 +97,22 @@ const FacebookSetup = () => {
     setSelectedPage("");
     setStatus("");
   };
+  const handleBack = () => {
+    setActiveStep((prevActiveStep) => prevActiveStep - 1);
+  };
 
-  const userUid = firebase.auth().currentUser?.uid;
-  const [status, setStatus] = useState("");
-  const [pages, setPages] = useState<any[]>([]);
-  const [userData, setUserData] = useState<firebase.firestore.DocumentData>();
-  const [userId, setUserId] = useState("");
-  const [userName, setUserName] = useState("");
-  const [selectedPage, setSelectedPage] = useState("");
+  const handleNext = () => {
+    setActiveStep((prevActiveStep) => prevActiveStep + 1);
+  };
 
+  const handleFinish = () => {
+    handleNext();
+    setUserPage();
+  };
+
+  // Facebook API functions
+
+  // Get the user's pages.
   const getUserPages = async () => {
     const userPages = await firebase
       .functions()
@@ -80,11 +120,13 @@ const FacebookSetup = () => {
     setPages(userPages.data);
   };
 
+  // Set the page that the user selected.
   const setUserPage = async () => {
     const setUserPage = await firebase
       .functions()
       .httpsCallable("setUserFacebookPage");
-    setUserPage({ pageID: selectedPage }).then((result) => {
+    setUserPage({ pageID: selectedPage }).then(() => {
+      props.setupState(true);
       handleClose();
     });
   };
@@ -100,6 +142,7 @@ const FacebookSetup = () => {
       const setupUserLogin = firebase
         .functions()
         .httpsCallable("userFacebookLogin");
+
       setupUserLogin({ userToken: response.accessToken })
         .then(() => {
           setStatus(`Hello, ${response.name}. Click next to continue`);
@@ -138,6 +181,7 @@ const FacebookSetup = () => {
               appId="224158632347699"
               fields="name,email,picture"
               scope="pages_show_list,pages_read_engagement,pages_read_user_content,pages_manage_posts,pages_manage_engagement"
+              render={FacebookLoginButton}
               callback={callbackResponse}
             />
             <Typography>{status}</Typography>
@@ -175,7 +219,7 @@ const FacebookSetup = () => {
                 {pages.map((item) => (
                   <FormControlLabel
                     value={item.id}
-                    control={<Radio />}
+                    control={<Radio color="primary" />}
                     label={item.name}
                   />
                 ))}
@@ -234,26 +278,9 @@ const FacebookSetup = () => {
     }
   };
 
-  const handleFinish = () => {
-    handleNext();
-    setUserPage();
-  };
-
-  const handleNext = () => {
-    setActiveStep((prevActiveStep) => prevActiveStep + 1);
-  };
-
-  const handleBack = () => {
-    if (activeStep === 0) {
-      handleClose();
-    } else {
-      setActiveStep((prevActiveStep) => prevActiveStep - 1);
-    }
-  };
-
   return (
     <div>
-      <Button variant="outlined" color="primary" onClick={handleClickOpen}>
+      <Button variant="outlined" color="primary" onClick={handleOpen}>
         Configure Facebook
       </Button>
       <Dialog
@@ -286,13 +313,20 @@ const FacebookSetup = () => {
   );
 };
 
+/**
+ * The Facebook settings panel. Displays the current status of the user's
+ * Facebook configuration and allows the user to manage their Facebook connection.
+ */
+// TODO: Add ability to log out of Facebook.
 const FacebookSettings = () => {
   const userUid = firebase.auth().currentUser?.uid;
   const [userData, setUserData] = useState<firebase.firestore.DocumentData>();
+  const [loading, setLoading] = useState(true);
 
-  const [setup, setSetup] = useState(false);
+  const [configCorrect, setConfigCorrect] = useState(false);
+  const [newSetup, setNewSetup] = useState(false);
 
-  useEffect(() => {
+  const loadData = () => {
     firebase
       .firestore()
       .doc(`users/${userUid}`)
@@ -306,44 +340,54 @@ const FacebookSettings = () => {
           db?.facebookUserID &&
           db?.facebookPageID
         ) {
-          setSetup(true);
+          setConfigCorrect(true);
+        } else if (!db?.facebookUserToken && !db?.facebookPageToken) {
+          setUserData(undefined);
         }
+        setLoading(false);
       });
-  }, []);
+  };
 
+  useEffect(loadData, [newSetup]);
+
+  // TODO: Do a check on these by sending off a Facebook API tests.
   return (
     <>
       <Typography variant="h5">Facebook Connection</Typography>
 
-      {userData ? (
-        <>
-          {setup ? (
-            <Typography variant="body1">
-              <CheckIcon /> Everything looks ok
-            </Typography>
-          ) : (
-            <Typography variant="body1">
-              <InfoIcon /> There might be a problem. Configure Facebook again to
-              restore functionality.
-            </Typography>
-          )}
-          <Typography variant="body1">
-            Authenticated as: {userData?.facebookUserName} (ID:{" "}
-            {userData?.facebookUserID})
-          </Typography>
-          <Typography variant="body1">
-            Posting to page: {userData?.facebookPageName} (ID:{" "}
-            {userData?.facebookPageID})
-          </Typography>
-        </>
+      {loading ? (
+        <LinearProgress />
       ) : (
         <>
-          <Typography variant="body1">
-            <InfoIcon /> Not setup
-          </Typography>
+          {userData ? (
+            <>
+              {configCorrect ? (
+                <Typography variant="body1">
+                  <CheckIcon /> Everything looks ok.
+                </Typography>
+              ) : (
+                <Typography variant="body1">
+                  <InfoIcon /> There might be a problem. Configure Facebook
+                  again to restore functionality.
+                </Typography>
+              )}
+              <Typography variant="body1">
+                Authenticated as: {userData?.facebookUserName}
+              </Typography>
+              <Typography variant="body1">
+                Posting to page: {userData?.facebookPageName}
+              </Typography>
+            </>
+          ) : (
+            <>
+              <Typography variant="body1">
+                <InfoIcon /> Not setup.
+              </Typography>
+            </>
+          )}
+          <FacebookSetup setupState={setNewSetup} />
         </>
       )}
-      <FacebookSetup />
     </>
   );
 };
