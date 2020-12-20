@@ -50,9 +50,7 @@ const EditPost = () => {
   const [disabled, setDisabled] = useState(false);
 
   const createPost = () => {
-    var facebookPost = firebase
-      .functions()
-      .httpsCallable("publishFacebookPost");
+    var facebookPost = firebase.functions().httpsCallable("publishToFacebook");
     facebookPost({ postID: postID })
       .then((result) => {
         enqueueSnackbar(

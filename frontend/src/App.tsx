@@ -28,6 +28,7 @@ import { SnackbarProvider } from "notistack";
 
 import Sidebar from "./components/Sidebar";
 import Pages from "./components/Pages";
+import Auth from "./modules/Auth";
 
 const drawerWidth = 240;
 
@@ -137,6 +138,9 @@ function App() {
                   {Pages.map((item) => (
                     <Route {...item.routeProps} path={item.path} />
                   ))}
+                  <Route path="/auth">
+                    <Auth />
+                  </Route>
                   <Route>
                     <Typography variant="h4">You seem lost</Typography>
                     {/* <br /> */}

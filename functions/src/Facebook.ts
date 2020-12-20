@@ -53,7 +53,7 @@ export const userFacebookLogin = functions.https.onCall(
         );
       }
 
-      await admin.firestore().doc(`users/${context.auth?.uid}`).set({
+      await admin.firestore().doc(`users/${context.auth?.uid}`).update({
         facebookUserName: userDataRequest.data.name,
         facebookUserID: userDataRequest.data.id,
         facebookUserToken: tokenRequest.data.access_token,
@@ -151,7 +151,7 @@ export const setUserFacebookPage = functions.https.onCall(
   }
 );
 
-export const publishFacebookPost = functions.https.onCall(
+export const publishToFacebook = functions.https.onCall(
   async (data, context) => {
     const postID = data.postID;
 
