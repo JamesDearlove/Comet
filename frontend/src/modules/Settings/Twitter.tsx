@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import firebase from "firebase";
 
@@ -6,8 +6,24 @@ import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
 import CircularProgress from "@material-ui/core/CircularProgress";
 
+import CheckIcon from "@material-ui/icons/Check";
+import InfoIcon from "@material-ui/icons/Info";
+
 const TwitterSettings = () => {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadingRequestToken, setLoadingRequestToken] = useState(false);
+
+  const [userData, setUserData] = useState<any>({});
+
+  useEffect(() => {
+    firebase
+      .functions()
+      .httpsCallable("verifyTwitterToken")()
+      .then((res) => {
+        setUserData(res.data);
+        setLoading(false);
+      });
+  }, []);
 
   const twitterLogin = firebase
     .functions()
@@ -15,29 +31,41 @@ const TwitterSettings = () => {
 
   //TODO: Fires twice
   const startLogin = async () => {
-    setLoading(true);
+    setLoadingRequestToken(true);
     const response = await twitterLogin();
     if (response.data) {
       window.location.href = `https://api.twitter.com/oauth/authorize?oauth_token=${response.data}`;
     } else {
-      setLoading(false);
+      setLoadingRequestToken(false);
     }
   };
 
   return (
     <>
-      <Typography variant="h5">Twitter Connection</Typography>
-      <Typography variant="body1">Current Status Here</Typography>
-      <Typography variant="body1">Logged in as: X</Typography>
-      <Button
-        variant="outlined"
-        color="primary"
-        onClick={startLogin}
-        disabled={loading}
-      >
-        Configure Twitter
-      </Button>
-      {loading && <CircularProgress />}
+      <Typography variant="h5">Twitter Connector</Typography>
+      {loading ? (
+        <CircularProgress />
+      ) : (
+        <>
+          <Typography variant="body1">
+            {userData.setup ? <CheckIcon /> : <InfoIcon />} {userData?.reason}
+          </Typography>
+          {userData?.screen_name && (
+            <Typography variant="body1">
+              Logged in as: @{userData?.screen_name}
+            </Typography>
+          )}
+          <Button
+            variant="outlined"
+            color="primary"
+            onClick={startLogin}
+            disabled={loadingRequestToken}
+          >
+            Configure Twitter
+          </Button>
+          {loadingRequestToken && <CircularProgress />}
+        </>
+      )}
     </>
   );
 };

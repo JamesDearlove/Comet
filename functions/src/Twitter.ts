@@ -28,8 +28,8 @@ const getClient = async (authenticated: boolean, authUid?: string) => {
     const tokenData = await admin.firestore().doc(`tokens/${authUid}`).get();
 
     if (
-      !tokenData.data()?.twitterOauthToken ||
-      !tokenData.data()?.twitterOauthSecret
+      !tokenData.data()?.twitterToken ||
+      !tokenData.data()?.twitterSecret
     ) {
       throw new functions.https.HttpsError(
         "unauthenticated",
@@ -39,8 +39,8 @@ const getClient = async (authenticated: boolean, authUid?: string) => {
 
     clientConfig = {
       ...clientConfig,
-      access_token_key: tokenData.data()?.twitterOauthToken,
-      access_token_secret: tokenData.data()?.twitterOauthSecret,
+      access_token_key: tokenData.data()?.twitterToken,
+      access_token_secret: tokenData.data()?.twitterSecret,
     };
   }
 
@@ -57,10 +57,10 @@ export const twitterLoginRequest = functions.https.onCall(
       // Something went wrong
     }
 
-    await admin.firestore().doc(`tokens/${context.auth?.uid}`).update({
-      twitterTempOauthToken: response.oauth_token,
-      twitterTempOauthTokenSecret: response.oauth_token_secret,
-    });
+    await admin.firestore().doc(`tokens/${context.auth?.uid}`).set({
+      twitterOauthToken: response.oauth_token,
+      twitterOauthTokenSecret: response.oauth_token_secret,
+    }, {merge: true});
 
     return response.oauth_token;
   }
@@ -91,7 +91,7 @@ export const userTwitterLogin = functions.https.onCall(
       );
     }
 
-    if (tokenData.data()?.twitterTempOauthToken !== oauth_token) {
+    if (tokenData.data()?.twitterOauthToken !== oauth_token) {
       throw new functions.https.HttpsError(
         "invalid-argument",
         "Given token did not match requested token."
@@ -106,10 +106,10 @@ export const userTwitterLogin = functions.https.onCall(
     const FieldValue = admin.firestore.FieldValue;
 
     await admin.firestore().doc(`tokens/${context.auth?.uid}`).update({
-      twitterOauthToken: response.oauth_token,
-      twitterOauthSecret: response.oauth_token_secret,
-      twitterTempOauthToken: FieldValue.delete(),
-      twitterTempOauthTokenSecret: FieldValue.delete(),
+      twitterToken: response.oauth_token,
+      twitterSecret: response.oauth_token_secret,
+      twitterOauthToken: FieldValue.delete(),
+      twitterOauthTokenSecret: FieldValue.delete(),
     });
 
     return "Success";
@@ -134,8 +134,8 @@ export const verifyTwitterToken = functions.https.onCall(
     if (
       !tokenData ||
       !(
-        tokenData.data()?.twitterOauthToken &&
-        tokenData.data()?.twitterOauthSecret
+        tokenData.data()?.twitterToken &&
+        tokenData.data()?.twitterSecret
       )
     ) {
       return { setup: false, reason: "Twitter is not linked." };
@@ -145,9 +145,7 @@ export const verifyTwitterToken = functions.https.onCall(
 
     let response;
     try {
-      response = await client.get("account/verify_credentials", {
-        fields: "name,screen_name",
-      });
+      response = await client.get("account/verify_credentials");
     } catch {
       // TODO: Take advantage of Twitter's error codes:
       // https://developer.twitter.com/en/support/twitter-api/error-troubleshooting
@@ -158,7 +156,6 @@ export const verifyTwitterToken = functions.https.onCall(
       setup: true,
       reason: "Your Twitter token is valid.",
       screen_name: response.screen_name,
-      name: response.name,
     };
   }
 );
