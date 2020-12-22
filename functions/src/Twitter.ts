@@ -3,27 +3,63 @@ import * as admin from "firebase-admin";
 
 const Twitter = require("twitter-lite");
 
-const client = new Twitter({
-  consumer_key: functions.config().twitter.consumerkey,
-  consumer_secret: functions.config().twitter.consumersecret,
-});
+const API_SUBDOMAIN = "api";
+const API_VERSION = "1.1";
+const CONSUMER_KEY = functions.config().twitter.consumerkey;
+const CONSUMER_SECRET = functions.config().twitter.consumersecret;
 
-const OAUTH_CALLBACK_URL = "https://localhost:3000/auth/twitter"
+const OAUTH_CALLBACK_URL = "https://localhost:3000/auth/twitter";
+
+const getClient = async (authenticated: boolean, authUid?: string) => {
+  let clientConfig: any = {
+    subdomain: API_SUBDOMAIN,
+    version: API_VERSION,
+    consumer_key: CONSUMER_KEY,
+    consumer_secret: CONSUMER_SECRET,
+  };
+
+  if (authenticated) {
+    if (!authUid) {
+      throw new functions.https.HttpsError(
+        "internal",
+        "Expected authentication data but received nothing."
+      );
+    }
+    const tokenData = await admin.firestore().doc(`tokens/${authUid}`).get();
+
+    if (
+      !tokenData.data()?.twitterOauthToken ||
+      !tokenData.data()?.twitterOauthSecret
+    ) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "User has not connected to Twitter."
+      );
+    }
+
+    clientConfig = {
+      ...clientConfig,
+      access_token_key: tokenData.data()?.twitterOauthToken,
+      access_token_secret: tokenData.data()?.twitterOauthSecret,
+    };
+  }
+
+  return new Twitter(clientConfig);
+};
 
 export const twitterLoginRequest = functions.https.onCall(
   async (data, context) => {
-    const response = await client.getRequestToken(
-      OAUTH_CALLBACK_URL
-    );
+    const client = await getClient(false);
+
+    const response = await client.getRequestToken(OAUTH_CALLBACK_URL);
 
     if (!response || !response.oauth_callback_confirmed) {
       // Something went wrong
     }
 
-    // TODO: This must be stored where only the server can access it
-    await admin.firestore().doc(`twitterAuth/${context.auth?.uid}`).update({
-      oauth_token: response.oauth_token,
-      oauth_token_secret: response.oauth_token_secret,
+    await admin.firestore().doc(`tokens/${context.auth?.uid}`).update({
+      twitterTempOauthToken: response.oauth_token,
+      twitterTempOauthTokenSecret: response.oauth_token_secret,
     });
 
     return response.oauth_token;
@@ -34,6 +70,7 @@ export const userTwitterLogin = functions.https.onCall(
   async (data, context) => {
     const oauth_token = data.oauth_token;
     const oauth_verifier = data.oauth_verifier;
+    const client = await getClient(false);
 
     if (!oauth_token || !oauth_verifier) {
       throw new functions.https.HttpsError(
@@ -42,19 +79,19 @@ export const userTwitterLogin = functions.https.onCall(
       );
     }
 
-    const tempToken = await admin
+    const tokenData = await admin
       .firestore()
-      .doc(`twitterAuth/${context.auth?.uid}`)
+      .doc(`tokens/${context.auth?.uid}`)
       .get();
 
-    if (!tempToken) {
+    if (!tokenData) {
       throw new functions.https.HttpsError(
         "not-found",
         "Could not find record of requested token."
       );
     }
 
-    if (tempToken.data()?.oauth_token !== oauth_token) {
+    if (tokenData.data()?.twitterTempOauthToken !== oauth_token) {
       throw new functions.https.HttpsError(
         "invalid-argument",
         "Given token did not match requested token."
@@ -66,13 +103,13 @@ export const userTwitterLogin = functions.https.onCall(
       oauth_verifier: oauth_verifier,
     });
 
-    console.log(response);
+    const FieldValue = admin.firestore.FieldValue;
 
-    await admin.firestore().doc(`users/${context.auth?.uid}`).update({
+    await admin.firestore().doc(`tokens/${context.auth?.uid}`).update({
       twitterOauthToken: response.oauth_token,
       twitterOauthSecret: response.oauth_token_secret,
-      twitterUserID: response.user_id,
-      twitterUsername: response.screen_name,
+      twitterTempOauthToken: FieldValue.delete(),
+      twitterTempOauthTokenSecret: FieldValue.delete(),
     });
 
     return "Success";
@@ -86,3 +123,42 @@ export const userTwitterLogout = functions.https.onCall((data, context) => {
 export const publishToTwitter = functions.https.onCall((data, context) => {
   throw new functions.https.HttpsError("unimplemented", "Not implemented.");
 });
+
+export const verifyTwitterToken = functions.https.onCall(
+  async (data, context) => {
+    const tokenData = await admin
+      .firestore()
+      .doc(`tokens/${context.auth?.uid}`)
+      .get();
+
+    if (
+      !tokenData ||
+      !(
+        tokenData.data()?.twitterOauthToken &&
+        tokenData.data()?.twitterOauthSecret
+      )
+    ) {
+      return { setup: false, reason: "Twitter is not linked." };
+    }
+
+    const client = await getClient(true, context.auth?.uid);
+
+    let response;
+    try {
+      response = await client.get("account/verify_credentials", {
+        fields: "name,screen_name",
+      });
+    } catch {
+      // TODO: Take advantage of Twitter's error codes:
+      // https://developer.twitter.com/en/support/twitter-api/error-troubleshooting
+      return { setup: false, reason: "Your Twitter token is no longer valid." };
+    }
+
+    return {
+      setup: true,
+      reason: "Your Twitter token is valid.",
+      screen_name: response.screen_name,
+      name: response.name,
+    };
+  }
+);

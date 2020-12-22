@@ -4,7 +4,7 @@ import firebase from "firebase";
 
 import { useQuery } from "./index";
 
-import LinearProgress from "@material-ui/core/LinearProgress";
+import CircularProgress from "@material-ui/core/CircularProgress";
 import Typography from "@material-ui/core/Typography";
 
 const TwitterAuth = () => {
@@ -38,8 +38,8 @@ const TwitterAuth = () => {
     <>
       {loading ? (
         <>
-          <LinearProgress />
           <Typography variant="h5">Authenticating with Twitter</Typography>
+          <CircularProgress />
         </>
       ) : success ? (
         <>

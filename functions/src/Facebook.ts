@@ -43,7 +43,7 @@ export const userFacebookLogin = functions.https.onCall(
 
     await admin.firestore().doc(`tokens/${context.auth?.uid}`).set({
       facebookUser: tokenRequest.data.access_token,
-    });
+    }, { merge: true });
 
     // TODO: Better way to signal success
     return "Success";
@@ -190,7 +190,7 @@ export const verifyFacebookToken = functions.https.onCall(
       if (!userFailed) {
         return {
           setup: true,
-          reason: "Facebook is linked and connection is successful.",
+          reason: "Your Facebook page and user tokens are valid.",
           user: userRequest?.data.name,
           page: pageRequest?.data.name,
         };
@@ -198,7 +198,7 @@ export const verifyFacebookToken = functions.https.onCall(
         return {
           setup: true,
           reason:
-            "Facebook is linked, page connection is successful but your user token is no longer valid.",
+            "Page token is valid but your user token is no longer valid.",
           page: pageRequest?.data.name,
         };
       }
@@ -206,7 +206,7 @@ export const verifyFacebookToken = functions.https.onCall(
       return {
         setup: false,
         reason:
-          "We could not connect to Facebook, please configure the Facebook connector again.",
+          "Your Facebook tokens are no longer valid.",
       };
     }
   }
