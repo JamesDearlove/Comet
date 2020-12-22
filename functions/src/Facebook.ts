@@ -39,28 +39,14 @@ export const userFacebookLogin = functions.https.onCall(
           `Recieved error when retrieving long-lived token. ${tokenRequest.data.error.code}: ${tokenRequest.data.error.message}`
         );
       }
-    } else {
-      const userDataRequest = await instance.get("me", {
-        params: {
-          access_token: tokenRequest.data.access_token,
-        },
-      });
-
-      if (!userDataRequest || !userDataRequest.data.name) {
-        throw new functions.https.HttpsError(
-          "internal",
-          "The long-lived token given by Facebook was not valid."
-        );
-      }
-
-      await admin.firestore().doc(`users/${context.auth?.uid}`).update({
-        facebookUserName: userDataRequest.data.name,
-        facebookUserID: userDataRequest.data.id,
-        facebookUserToken: tokenRequest.data.access_token,
-      });
     }
 
-    return tokenRequest.data.access_token;
+    await admin.firestore().doc(`tokens/${context.auth?.uid}`).set({
+      facebookUser: tokenRequest.data.access_token,
+    });
+
+    // TODO: Better way to signal success
+    return "Success";
   }
 );
 
@@ -73,15 +59,14 @@ export const getUserFacebookPages = functions.https.onCall(
   async (data, context) => {
     const userData = await admin
       .firestore()
-      .doc(`users/${context.auth?.uid}`)
+      .doc(`tokens/${context.auth?.uid}`)
       .get();
-    const userToken = userData.data()?.facebookUserToken;
+    const userToken = userData.data()?.facebookUser;
 
     const pageListRequest = await instance.get("me/accounts", {
       params: {
         access_token: userToken,
         fields: "id,name",
-        // fields: "access_token,id,name",
       },
     });
 
@@ -103,9 +88,9 @@ export const setUserFacebookPage = functions.https.onCall(
 
     const userData = await admin
       .firestore()
-      .doc(`users/${context.auth?.uid}`)
+      .doc(`tokens/${context.auth?.uid}`)
       .get();
-    const userToken = userData.data()?.facebookUserToken;
+    const userToken = userData.data()?.facebookUser;
 
     const tokenRequest = await instance.get(`${pageID}/`, {
       params: {
@@ -126,26 +111,11 @@ export const setUserFacebookPage = functions.https.onCall(
           `Recieved error when retrieving page token. ${tokenRequest.data.error.code}: ${tokenRequest.data.error.message}`
         );
       }
-    } else {
-      const userDataRequest = await instance.get("me", {
-        params: {
-          access_token: tokenRequest.data.access_token,
-        },
-      });
-
-      if (!userDataRequest || !userDataRequest.data.name) {
-        throw new functions.https.HttpsError(
-          "internal",
-          "The page token given by Facebook was not valid."
-        );
-      }
-
-      await admin.firestore().doc(`users/${context.auth?.uid}`).update({
-        facebookPageName: userDataRequest.data.name,
-        facebookPageID: userDataRequest.data.id,
-        facebookPageToken: tokenRequest.data.access_token,
-      });
     }
+
+    await admin.firestore().doc(`tokens/${context.auth?.uid}`).update({
+      facebookPage: tokenRequest.data.access_token,
+    });
 
     return "Success";
   }
@@ -173,5 +143,71 @@ export const publishToFacebook = functions.https.onCall(
     }
 
     return creationResult.data;
+  }
+);
+
+export const verifyFacebookToken = functions.https.onCall(
+  async (data, context) => {
+    const tokenDocument = await admin
+      .firestore()
+      .doc(`tokens/${context.auth?.uid}`)
+      .get();
+    const tokenData = tokenDocument.data();
+    const userToken = tokenData?.facebookUser;
+    const pageToken = tokenData?.facebookPage;
+
+    if (!tokenData || (!userToken && !pageToken)) {
+      return { setup: false, reason: "Facebook is not linked." };
+    }
+
+    let userFailed = false;
+    let userRequest;
+    try {
+      userRequest = await instance.get("me", {
+        params: {
+          access_token: userToken,
+          fields: "id,name",
+        },
+      });
+    } catch {
+      userFailed = true;
+    }
+
+    let pageFailed = false;
+    let pageRequest;
+    try {
+      pageRequest = await instance.get("me", {
+        params: {
+          access_token: pageToken,
+          fields: "id,name",
+        },
+      });
+    } catch {
+      pageFailed = true;
+    }
+
+    if (!pageFailed) {
+      if (!userFailed) {
+        return {
+          setup: true,
+          reason: "Facebook is linked and connection is successful.",
+          user: userRequest?.data.name,
+          page: pageRequest?.data.name,
+        };
+      } else {
+        return {
+          setup: true,
+          reason:
+            "Facebook is linked, page connection is successful but your user token is no longer valid.",
+          page: pageRequest?.data.name,
+        };
+      }
+    } else {
+      return {
+        setup: false,
+        reason:
+          "We could not connect to Facebook, please configure the Facebook connector again.",
+      };
+    }
   }
 );

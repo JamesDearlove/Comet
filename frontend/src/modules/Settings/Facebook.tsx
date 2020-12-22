@@ -9,7 +9,6 @@ import DialogContent from "@material-ui/core/DialogContent";
 import DialogTitle from "@material-ui/core/DialogTitle";
 import FormControl from "@material-ui/core/FormControl";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
-import LinearProgress from "@material-ui/core/LinearProgress";
 import Radio from "@material-ui/core/Radio";
 import RadioGroup from "@material-ui/core/RadioGroup";
 import Step from "@material-ui/core/Step";
@@ -319,69 +318,52 @@ const FacebookSetup = (props: {
  */
 // TODO: Add ability to log out of Facebook.
 const FacebookSettings = () => {
-  const userUid = firebase.auth().currentUser?.uid;
-  const [userData, setUserData] = useState<firebase.firestore.DocumentData>();
+  const [userData, setUserData] = useState<any>({});
   const [loading, setLoading] = useState(true);
 
-  const [configCorrect, setConfigCorrect] = useState(false);
   const [newSetup, setNewSetup] = useState(false);
 
   const loadData = () => {
     firebase
-      .firestore()
-      .doc(`users/${userUid}`)
-      .get()
-      .then((data) => {
-        const db = data.data();
-        setUserData(data.data());
-        if (
-          db?.facebookUserToken &&
-          db?.facebookPageToken &&
-          db?.facebookUserID &&
-          db?.facebookPageID
-        ) {
-          setConfigCorrect(true);
-        } else if (!db?.facebookUserToken && !db?.facebookPageToken) {
-          setUserData(undefined);
-        }
+      .functions()
+      .httpsCallable("verifyFacebookToken")()
+      .then((res) => {
+        setUserData(res.data);
         setLoading(false);
       });
   };
 
   useEffect(loadData, [newSetup]);
 
-  // TODO: Do a check on these by sending off a Facebook API tests.
   return (
     <>
-      <Typography variant="h5">Facebook Connection</Typography>
+      <Typography variant="h5">Facebook Connector</Typography>
 
       {loading ? (
-        <LinearProgress />
+        <CircularProgress />
       ) : (
         <>
           {userData ? (
             <>
-              {configCorrect ? (
+              <Typography variant="body1">
+                {userData.setup ? <CheckIcon /> : <InfoIcon />}{" "}
+                {userData.reason}
+              </Typography>
+              {userData.user && (
                 <Typography variant="body1">
-                  <CheckIcon /> Everything looks ok.
-                </Typography>
-              ) : (
-                <Typography variant="body1">
-                  <InfoIcon /> There might be a problem. Configure Facebook
-                  again to restore functionality.
+                  Authenticated as: {userData.user}
                 </Typography>
               )}
-              <Typography variant="body1">
-                Authenticated as: {userData?.facebookUserName}
-              </Typography>
-              <Typography variant="body1">
-                Posting to page: {userData?.facebookPageName}
-              </Typography>
+              {userData.page && (
+                <Typography variant="body1">
+                  Connected to page: {userData.page}
+                </Typography>
+              )}
             </>
           ) : (
             <>
               <Typography variant="body1">
-                <InfoIcon /> Not setup.
+                <InfoIcon /> {userData.reasn}
               </Typography>
             </>
           )}
