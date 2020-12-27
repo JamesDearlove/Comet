@@ -6,10 +6,11 @@ import { useQuery } from "./index";
 
 import CircularProgress from "@material-ui/core/CircularProgress";
 import Typography from "@material-ui/core/Typography";
+import { useSnackbar } from "notistack";
 
 const TwitterAuth = () => {
   const [loading, setLoading] = useState(true);
-  const [success, setSuccess] = useState(false);
+  const { enqueueSnackbar } = useSnackbar();
   let query = useQuery();
 
   const oauth_token = query.get("oauth_token");
@@ -23,12 +24,28 @@ const TwitterAuth = () => {
     })
       .then((result) => {
         if (result.data === "Success") {
-          setSuccess(true);
+          enqueueSnackbar("Successfully authenticated with Twitter.", {
+            variant: "success",
+          });
+        } else {
+          enqueueSnackbar(
+            "Failed to authenticated with Twitter. Please try again.",
+            {
+              variant: "error",
+            }
+          );
         }
         setLoading(false);
       })
       .catch((result) => {
         //TODO: Make more verbose
+        console.log(result);
+        enqueueSnackbar(
+          "Failed to authenticated with Twitter. Please try again.",
+          {
+            variant: "error",
+          }
+        );
 
         setLoading(false);
       });
@@ -41,15 +58,8 @@ const TwitterAuth = () => {
           <Typography variant="h5">Authenticating with Twitter</Typography>
           <CircularProgress />
         </>
-      ) : success ? (
-        <>
-          <Typography variant="h5">
-            Successfully authenticated with Twitter
-          </Typography>
-          <Redirect to="/settings" />
-        </>
       ) : (
-        <Typography>Failed to authenticate with Twitter</Typography>
+        <Redirect to="/settings" />
       )}
     </>
   );

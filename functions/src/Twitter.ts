@@ -28,8 +28,8 @@ const getClient = async (authenticated: boolean, authUid?: string) => {
     const tokenData = await admin.firestore().doc(`tokens/${authUid}`).get();
 
     if (
-      !tokenData.data()?.twitterToken ||
-      !tokenData.data()?.twitterSecret
+      !tokenData.data()?.twitter?.token ||
+      !tokenData.data()?.twitter?.tokenSecret
     ) {
       throw new functions.https.HttpsError(
         "unauthenticated",
@@ -39,8 +39,8 @@ const getClient = async (authenticated: boolean, authUid?: string) => {
 
     clientConfig = {
       ...clientConfig,
-      access_token_key: tokenData.data()?.twitterToken,
-      access_token_secret: tokenData.data()?.twitterSecret,
+      access_token_key: tokenData.data()?.twitter?.token,
+      access_token_secret: tokenData.data()?.twitter?.tokenSecret,
     };
   }
 
@@ -58,8 +58,10 @@ export const twitterLoginRequest = functions.https.onCall(
     }
 
     await admin.firestore().doc(`tokens/${context.auth?.uid}`).set({
-      twitterOauthToken: response.oauth_token,
-      twitterOauthTokenSecret: response.oauth_token_secret,
+      twitter: {
+        oauthToken: response.oauth_token,
+        oauthTokenSecret: response.oauth_token_secret,
+      }
     }, {merge: true});
 
     return response.oauth_token;
@@ -91,7 +93,7 @@ export const userTwitterLogin = functions.https.onCall(
       );
     }
 
-    if (tokenData.data()?.twitterOauthToken !== oauth_token) {
+    if (tokenData.data()?.twitter?.oauthToken !== oauth_token) {
       throw new functions.https.HttpsError(
         "invalid-argument",
         "Given token did not match requested token."
@@ -103,13 +105,11 @@ export const userTwitterLogin = functions.https.onCall(
       oauth_verifier: oauth_verifier,
     });
 
-    const FieldValue = admin.firestore.FieldValue;
-
     await admin.firestore().doc(`tokens/${context.auth?.uid}`).update({
-      twitterToken: response.oauth_token,
-      twitterSecret: response.oauth_token_secret,
-      twitterOauthToken: FieldValue.delete(),
-      twitterOauthTokenSecret: FieldValue.delete(),
+      twitter: {
+        token: response.oauth_token,
+        tokenSecret: response.oauth_token_secret,
+      }
     });
 
     return "Success";
@@ -134,8 +134,8 @@ export const verifyTwitterToken = functions.https.onCall(
     if (
       !tokenData ||
       !(
-        tokenData.data()?.twitterToken &&
-        tokenData.data()?.twitterSecret
+        tokenData.data()?.twitter?.token &&
+        tokenData.data()?.twitter?.tokenSecret
       )
     ) {
       return { setup: false, reason: "Twitter is not linked." };

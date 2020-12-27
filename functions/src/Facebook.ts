@@ -41,9 +41,17 @@ export const userFacebookLogin = functions.https.onCall(
       }
     }
 
-    await admin.firestore().doc(`tokens/${context.auth?.uid}`).set({
-      facebookUser: tokenRequest.data.access_token,
-    }, { merge: true });
+    await admin
+      .firestore()
+      .doc(`tokens/${context.auth?.uid}`)
+      .set(
+        {
+          facebook: {
+            user: tokenRequest.data.access_token,
+          },
+        },
+        { merge: true }
+      );
 
     // TODO: Better way to signal success
     return "Success";
@@ -61,7 +69,14 @@ export const getUserFacebookPages = functions.https.onCall(
       .firestore()
       .doc(`tokens/${context.auth?.uid}`)
       .get();
-    const userToken = userData.data()?.facebookUser;
+    const userToken = userData.data()?.facebook?.user;
+
+    if (!userToken) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "User is not authenticated with Facebook"
+      );
+    }
 
     const pageListRequest = await instance.get("me/accounts", {
       params: {
@@ -90,7 +105,7 @@ export const setUserFacebookPage = functions.https.onCall(
       .firestore()
       .doc(`tokens/${context.auth?.uid}`)
       .get();
-    const userToken = userData.data()?.facebookUser;
+    const userToken = userData.data()?.facebook?.user;
 
     const tokenRequest = await instance.get(`${pageID}/`, {
       params: {
@@ -114,7 +129,7 @@ export const setUserFacebookPage = functions.https.onCall(
     }
 
     await admin.firestore().doc(`tokens/${context.auth?.uid}`).update({
-      facebookPage: tokenRequest.data.access_token,
+      "facebook.page": tokenRequest.data.access_token,
     });
 
     return "Success";
@@ -153,8 +168,8 @@ export const verifyFacebookToken = functions.https.onCall(
       .doc(`tokens/${context.auth?.uid}`)
       .get();
     const tokenData = tokenDocument.data();
-    const userToken = tokenData?.facebookUser;
-    const pageToken = tokenData?.facebookPage;
+    const userToken = tokenData?.facebook?.user;
+    const pageToken = tokenData?.facebook?.page;
 
     if (!tokenData || (!userToken && !pageToken)) {
       return { setup: false, reason: "Facebook is not linked." };
@@ -197,16 +212,14 @@ export const verifyFacebookToken = functions.https.onCall(
       } else {
         return {
           setup: true,
-          reason:
-            "Page token is valid but your user token is no longer valid.",
+          reason: "Page token is valid but your user token is no longer valid.",
           page: pageRequest?.data.name,
         };
       }
     } else {
       return {
         setup: false,
-        reason:
-          "Your Facebook tokens are no longer valid.",
+        reason: "Your Facebook tokens are no longer valid.",
       };
     }
   }

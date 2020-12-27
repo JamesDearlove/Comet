@@ -139,19 +139,75 @@ const EditPost = () => {
                   <FormGroup>
                     <FormControlLabel
                       // control={<Checkbox checked={gilad} onChange={handleChange} name="gilad" />}
-                      control={<Checkbox name="facebook" />}
+                      control={
+                        <Checkbox
+                          name="facebook"
+                          checked={post.postTo?.facebook}
+                          onChange={(e) =>
+                            setPost({
+                              ...post,
+                              postTo: {
+                                ...post.postTo,
+                                facebook: e.target.checked,
+                              },
+                            })
+                          }
+                        />
+                      }
                       label="Facebook"
                     />
                     <FormControlLabel
-                      control={<Checkbox name="twitter" />}
+                      control={
+                        <Checkbox
+                          name="twitter"
+                          checked={post.postTo?.twitter}
+                          onChange={(e) =>
+                            setPost({
+                              ...post,
+                              postTo: {
+                                ...post.postTo,
+                                twitter: e.target.checked,
+                              },
+                            })
+                          }
+                        />
+                      }
                       label="Twitter"
                     />
                     <FormControlLabel
-                      control={<Checkbox name="linkedin" />}
+                      control={
+                        <Checkbox
+                          name="linkedin"
+                          checked={post.postTo?.linkedin}
+                          onChange={(e) =>
+                            setPost({
+                              ...post,
+                              postTo: {
+                                ...post.postTo,
+                                linkedin: e.target.checked,
+                              },
+                            })
+                          }
+                        />
+                      }
                       label="Linkedin"
                     />
                     <FormControlLabel
-                      control={<Checkbox name="slack" />}
+                      control={
+                        <Checkbox
+                          name="slack"
+                          checked={post.postTo?.slack}
+                          onChange={(e) =>
+                            setPost({
+                              ...post,
+                              postTo: {
+                                ...post.postTo,
+                                slack: e.target.checked,
+                              },
+                            })
+                          }
+                        />
+                      }
                       label="Slack"
                     />
                   </FormGroup>
