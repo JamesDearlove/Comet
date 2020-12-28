@@ -50,15 +50,10 @@ const EditPost = () => {
   const [disabled, setDisabled] = useState(false);
 
   const createPost = () => {
-    var facebookPost = firebase.functions().httpsCallable("publishToFacebook");
+    var facebookPost = firebase.functions().httpsCallable("publishPost");
     facebookPost({ postID: postID })
       .then((result) => {
-        enqueueSnackbar(
-          <a target="_blank" rel="noreferrer" href={result.data.permalink_url}>
-            Posted to Facebook
-          </a>,
-          { variant: "success" }
-        );
+        enqueueSnackbar("Successfully published post.", { variant: "success" });
       })
       .catch((result) =>
         enqueueSnackbar(`Failed to post to Facebook, ${result}`, {

@@ -136,31 +136,6 @@ export const setUserFacebookPage = functions.https.onCall(
   }
 );
 
-export const publishToFacebook = functions.https.onCall(
-  async (data, context) => {
-    const postID = data.postID;
-
-    const postDataRef = admin.firestore().doc(`posts/${postID}`);
-    const postData = await postDataRef.get();
-
-    if (!postData) {
-      throw new functions.https.HttpsError("not-found", "Post not found.");
-    }
-
-    const creationResult = await instance.post("me/feed", {
-      access_token: postData.data()?.facebook.token,
-      message: postData.data()?.content,
-      fields: "permalink_url",
-    });
-
-    if (creationResult.status === 200) {
-      await postDataRef.update({ postedOn: new Date() });
-    }
-
-    return creationResult.data;
-  }
-);
-
 export const verifyFacebookToken = functions.https.onCall(
   async (data, context) => {
     const tokenDocument = await admin
@@ -224,3 +199,37 @@ export const verifyFacebookToken = functions.https.onCall(
     }
   }
 );
+
+export const publishPostFacebook = async (postID: string) => {
+  const postRef = admin.firestore().doc(`posts/${postID}`);
+  const postData = await postRef.get();
+
+  if (postData.exists) {
+    const tokenRef = await admin
+      .firestore()
+      .doc(`tokens/${postData.data()?.ownerID}`)
+      .get();
+    const tokenData = tokenRef.data();
+
+    const creationResult = await instance.post("me/feed", {
+      access_token: tokenData?.facebook.page,
+      message: postData.data()?.content,
+      fields: "permalink_url",
+    });
+
+    // TODO: Handle result better
+    if (creationResult.status === 200) {
+      postRef.update({
+        permalink: {
+          ...postData.data()?.permalink,
+          facebook: creationResult.data.permalink_url,
+        },
+      });
+    }
+    else {
+      throw new functions.https.HttpsError("permission-denied", "Unable to post to Facebook");
+    }
+  } else {
+    throw new functions.https.HttpsError("not-found", "Post not found");
+  }
+};
