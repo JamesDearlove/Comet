@@ -2,6 +2,7 @@ import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
 import { publishPostFacebook } from "./Facebook";
+import { publishPostTwitter } from "./Twitter";
 
 export * from "./Facebook";
 export * from "./Twitter";
@@ -57,12 +58,15 @@ export const publishPost = functions.https.onCall(async (data, context) => {
     const postToLocations = postData.postTo;
 
     if (postToLocations.facebook) {
-      await publishPostFacebook(postID)      
+      await publishPostFacebook(postID);
     }
 
+    if (postToLocations.twitter) {
+      await publishPostTwitter(postID);
+    }
   } else {
     throw new functions.https.HttpsError("not-found", "Post not found");
   }
 
-  return "Success"
+  return "Success";
 });

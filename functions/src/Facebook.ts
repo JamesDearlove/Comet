@@ -225,9 +225,11 @@ export const publishPostFacebook = async (postID: string) => {
           facebook: creationResult.data.permalink_url,
         },
       });
-    }
-    else {
-      throw new functions.https.HttpsError("permission-denied", "Unable to post to Facebook");
+    } else {
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "Unable to post to Facebook"
+      );
     }
   } else {
     throw new functions.https.HttpsError("not-found", "Post not found");

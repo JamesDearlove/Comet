@@ -57,12 +57,18 @@ export const twitterLoginRequest = functions.https.onCall(
       // Something went wrong
     }
 
-    await admin.firestore().doc(`tokens/${context.auth?.uid}`).set({
-      twitter: {
-        oauthToken: response.oauth_token,
-        oauthTokenSecret: response.oauth_token_secret,
-      }
-    }, {merge: true});
+    await admin
+      .firestore()
+      .doc(`tokens/${context.auth?.uid}`)
+      .set(
+        {
+          twitter: {
+            oauthToken: response.oauth_token,
+            oauthTokenSecret: response.oauth_token_secret,
+          },
+        },
+        { merge: true }
+      );
 
     return response.oauth_token;
   }
@@ -105,12 +111,15 @@ export const userTwitterLogin = functions.https.onCall(
       oauth_verifier: oauth_verifier,
     });
 
-    await admin.firestore().doc(`tokens/${context.auth?.uid}`).update({
-      twitter: {
-        token: response.oauth_token,
-        tokenSecret: response.oauth_token_secret,
-      }
-    });
+    await admin
+      .firestore()
+      .doc(`tokens/${context.auth?.uid}`)
+      .update({
+        twitter: {
+          token: response.oauth_token,
+          tokenSecret: response.oauth_token_secret,
+        },
+      });
 
     return "Success";
   }
@@ -159,3 +168,35 @@ export const verifyTwitterToken = functions.https.onCall(
     };
   }
 );
+
+export const publishPostTwitter = async (postID: string) => {
+  const postRef = admin.firestore().doc(`posts/${postID}`);
+  const postData = await postRef.get();
+
+  if (postData.exists) {
+    const client = await getClient(true, postData.data()?.ownerID);
+
+    let tweet;
+
+    try {
+      tweet = await client.post("statuses/update", {
+        status: postData.data()?.content,
+      });
+    } catch {
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "Unable to post to Twitter"
+      );
+    }
+
+    // TODO: This is sketch, fix this later
+    postRef.update({
+      permalink: {
+        ...postData.data()?.permalink,
+        twitter: `https://twitter.com/i/web/status/${tweet.id_str}`,
+      },
+    });
+  } else {
+    throw new functions.https.HttpsError("not-found", "Post not found");
+  }
+};
