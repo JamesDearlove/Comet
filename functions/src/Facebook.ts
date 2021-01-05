@@ -219,7 +219,7 @@ export const publishPostFacebook = async (postID: string) => {
 
     // TODO: Handle result better
     if (creationResult.status === 200) {
-      postRef.update({
+      await postRef.update({
         permalink: {
           ...postData.data()?.permalink,
           facebook: creationResult.data.permalink_url,

@@ -190,7 +190,7 @@ export const publishPostTwitter = async (postID: string) => {
     }
 
     // TODO: This is sketch, fix this later
-    postRef.update({
+    await postRef.update({
       permalink: {
         ...postData.data()?.permalink,
         twitter: `https://twitter.com/i/web/status/${tweet.id_str}`,
