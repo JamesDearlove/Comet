@@ -6,6 +6,7 @@ import { publishPostTwitter } from "./Twitter";
 
 export * from "./Facebook";
 export * from "./Twitter";
+export * from "./Slack";
 
 admin.initializeApp();
 
