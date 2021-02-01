@@ -56,7 +56,7 @@ const EditPost = () => {
         enqueueSnackbar("Successfully published post.", { variant: "success" });
       })
       .catch((result) =>
-        enqueueSnackbar(`Failed to post to Facebook, ${result}`, {
+        enqueueSnackbar(`Failed to publish post, ${result}`, {
           variant: "error",
         })
       );
@@ -74,7 +74,7 @@ const EditPost = () => {
   };
 
   const postNowClick = async () => {
-    setDisabled(true);
+    // setDisabled(true);
     await postsRef.update({ ...post });
     createPost();
   };

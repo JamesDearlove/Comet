@@ -3,6 +3,7 @@ import * as admin from "firebase-admin";
 
 import { publishPostFacebook } from "./Facebook";
 import { publishPostTwitter } from "./Twitter";
+import { publishPostSlack } from "./Slack";
 
 export * from "./Facebook";
 export * from "./Twitter";
@@ -65,6 +66,11 @@ export const publishPost = functions.https.onCall(async (data, context) => {
     if (postToLocations.twitter) {
       await publishPostTwitter(postID);
     }
+
+    if (postToLocations.slack) {
+      await publishPostSlack(postID);
+    }
+
   } else {
     throw new functions.https.HttpsError("not-found", "Post not found");
   }
