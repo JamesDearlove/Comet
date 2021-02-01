@@ -18,7 +18,7 @@ const TwitterSettings = () => {
   useEffect(() => {
     firebase
       .functions()
-      .httpsCallable("verifyTwitterToken")()
+      .httpsCallable("twitterVerifyToken")()
       .then((res) => {
         setUserData(res.data);
         setLoading(false);

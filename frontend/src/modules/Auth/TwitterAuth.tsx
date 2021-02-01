@@ -17,7 +17,7 @@ const TwitterAuth = () => {
   const oauth_verifier = query.get("oauth_verifier");
 
   useEffect(() => {
-    var twitterLogin = firebase.functions().httpsCallable("userTwitterLogin");
+    var twitterLogin = firebase.functions().httpsCallable("twitterUserLogin");
     twitterLogin({
       oauth_token: oauth_token,
       oauth_verifier: oauth_verifier,

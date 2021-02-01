@@ -5,13 +5,9 @@ import * as slack from "@slack/web-api";
 
 // const CLIENT_ID = functions.config().slack.clientid;
 
-const TEMP_TOKEN = functions.config().slack.usertoken;
-
 // TODO: Enable OAuth
 const getClient = async (authUid: string) => {
   const tokenData = await admin.firestore().doc(`tokens/${authUid}`).get();
-
-  console.log(tokenData.data()?.slack.token)
 
   if (!tokenData.data()?.slack?.token) {
     throw new functions.https.HttpsError(
@@ -28,35 +24,19 @@ export const slackLoginRequest = functions.https.onCall(() => {
   throw new functions.https.HttpsError("unimplemented", "Unimplemented");
 });
 
-export const userSlackLogin = functions.https.onCall(() => {
+export const slackUserLogin = functions.https.onCall(() => {
   throw new functions.https.HttpsError("unimplemented", "Unimplemented");
 });
 
-export const userSlackLogout = functions.https.onCall(() => {
+export const slackUserLogout = functions.https.onCall(() => {
   throw new functions.https.HttpsError("unimplemented", "Unimplemented");
 });
 
-export const publishToSlack = functions.https.onCall(() => {
+export const slackVerifyToken = functions.https.onCall(() => {
   throw new functions.https.HttpsError("unimplemented", "Unimplemented");
 });
 
-export const verifySlackToken = functions.https.onCall(() => {
-  throw new functions.https.HttpsError("unimplemented", "Unimplemented");
-});
-
-export const testSlack = functions.https.onCall(async (data, context) => {
-  const message = data.message;
-  const web = new slack.WebClient(TEMP_TOKEN);
-
-  await web.chat.postMessage({
-    channel: "#general",
-    text: message,
-  });
-
-  return "Success";
-});
-
-export const publishPostSlack = async (postID: string) => {
+export const slackPublishPost = async (postID: string) => {
   const postRef = admin.firestore().doc(`posts/${postID}`);
   const postData = await postRef.get();
 

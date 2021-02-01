@@ -1,9 +1,9 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
-import { publishPostFacebook } from "./Facebook";
-import { publishPostTwitter } from "./Twitter";
-import { publishPostSlack } from "./Slack";
+import { facebookPublishPost } from "./Facebook";
+import { twitterPublishPost } from "./Twitter";
+import { slackPublishPost } from "./Slack";
 
 export * from "./Facebook";
 export * from "./Twitter";
@@ -60,15 +60,15 @@ export const publishPost = functions.https.onCall(async (data, context) => {
     const postToLocations = postData.postTo;
 
     if (postToLocations.facebook) {
-      await publishPostFacebook(postID);
+      await facebookPublishPost(postID);
     }
 
     if (postToLocations.twitter) {
-      await publishPostTwitter(postID);
+      await twitterPublishPost(postID);
     }
 
     if (postToLocations.slack) {
-      await publishPostSlack(postID);
+      await slackPublishPost(postID);
     }
 
   } else {

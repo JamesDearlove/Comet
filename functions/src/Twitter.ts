@@ -74,7 +74,7 @@ export const twitterLoginRequest = functions.https.onCall(
   }
 );
 
-export const userTwitterLogin = functions.https.onCall(
+export const twitterUserLogin = functions.https.onCall(
   async (data, context) => {
     const oauth_token = data.oauth_token;
     const oauth_verifier = data.oauth_verifier;
@@ -125,15 +125,11 @@ export const userTwitterLogin = functions.https.onCall(
   }
 );
 
-export const userTwitterLogout = functions.https.onCall((data, context) => {
+export const twitterUserLogout = functions.https.onCall((data, context) => {
   throw new functions.https.HttpsError("unimplemented", "Not implemented.");
 });
 
-export const publishToTwitter = functions.https.onCall((data, context) => {
-  throw new functions.https.HttpsError("unimplemented", "Not implemented.");
-});
-
-export const verifyTwitterToken = functions.https.onCall(
+export const twitterVerifyToken = functions.https.onCall(
   async (data, context) => {
     const tokenData = await admin
       .firestore()
@@ -169,7 +165,7 @@ export const verifyTwitterToken = functions.https.onCall(
   }
 );
 
-export const publishPostTwitter = async (postID: string) => {
+export const twitterPublishPost = async (postID: string) => {
   const postRef = admin.firestore().doc(`posts/${postID}`);
   const postData = await postRef.get();
 

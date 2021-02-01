@@ -7,7 +7,7 @@ const instance = axios.create({
   baseURL: "https://graph.facebook.com/v9.0/",
 });
 
-export const userFacebookLogin = functions.https.onCall(
+export const facebookUserLogin = functions.https.onCall(
   async (data, context) => {
     const userShortToken = data.userToken;
 
@@ -58,12 +58,12 @@ export const userFacebookLogin = functions.https.onCall(
   }
 );
 
-export const userFacebookLogout = functions.https.onCall((data, context) => {
+export const facebookUserLogout = functions.https.onCall((data, context) => {
   throw new functions.https.HttpsError("unimplemented", "Not implemented.");
 });
 
 // TODO: Graceful handling of errors
-export const getUserFacebookPages = functions.https.onCall(
+export const facebookGetUserPages = functions.https.onCall(
   async (data, context) => {
     const userData = await admin
       .firestore()
@@ -97,7 +97,7 @@ export const getUserFacebookPages = functions.https.onCall(
 );
 
 // TODO: Graceful handling of errors
-export const setUserFacebookPage = functions.https.onCall(
+export const facebookSetUserPage = functions.https.onCall(
   async (data, context) => {
     const pageID = data.pageID;
 
@@ -136,7 +136,7 @@ export const setUserFacebookPage = functions.https.onCall(
   }
 );
 
-export const verifyFacebookToken = functions.https.onCall(
+export const facebookVerifyToken = functions.https.onCall(
   async (data, context) => {
     const tokenDocument = await admin
       .firestore()
@@ -200,7 +200,7 @@ export const verifyFacebookToken = functions.https.onCall(
   }
 );
 
-export const publishPostFacebook = async (postID: string) => {
+export const facebookPublishPost = async (postID: string) => {
   const postRef = admin.firestore().doc(`posts/${postID}`);
   const postData = await postRef.get();
 

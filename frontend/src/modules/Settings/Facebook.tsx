@@ -115,7 +115,7 @@ const FacebookSetup = (props: {
   const getUserPages = async () => {
     const userPages = await firebase
       .functions()
-      .httpsCallable("getUserFacebookPages")();
+      .httpsCallable("facebookGetUserPages")();
     setPages(userPages.data);
   };
 
@@ -123,7 +123,7 @@ const FacebookSetup = (props: {
   const setUserPage = async () => {
     const setUserPage = await firebase
       .functions()
-      .httpsCallable("setUserFacebookPage");
+      .httpsCallable("facebookSetUserPage");
     setUserPage({ pageID: selectedPage }).then(() => {
       props.setupState(true);
       handleClose();
@@ -140,7 +140,7 @@ const FacebookSetup = (props: {
     } else {
       const setupUserLogin = firebase
         .functions()
-        .httpsCallable("userFacebookLogin");
+        .httpsCallable("facebookUserLogin");
 
       setupUserLogin({ userToken: response.accessToken })
         .then(() => {
@@ -326,7 +326,7 @@ const FacebookSettings = () => {
   const loadData = () => {
     firebase
       .functions()
-      .httpsCallable("verifyFacebookToken")()
+      .httpsCallable("facebookVerifyToken")()
       .then((res) => {
         setUserData(res.data);
         setLoading(false);
