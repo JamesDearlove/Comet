@@ -115,6 +115,11 @@ function App() {
         )}
       </div>
       <Box mt={8}>
+        <Typography variant="body2" align="center">
+          Comet is early in development is not currently accepting user signups.
+          Follow @JimmyDearlove on Twitter for future updates.
+        </Typography>
+        <br />
         <Typography variant="body2" color="textSecondary" align="center">
           {"Copyright © James Dearlove "}
           {new Date().getFullYear()}

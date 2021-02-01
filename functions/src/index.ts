@@ -70,10 +70,21 @@ export const publishPost = functions.https.onCall(async (data, context) => {
     if (postToLocations.slack) {
       await slackPublishPost(postID);
     }
-
   } else {
     throw new functions.https.HttpsError("not-found", "Post not found");
   }
 
   return "Success";
+});
+
+// Disable user signups for now 
+// https://stackoverflow.com/questions/38357554/how-to-disable-signup-in-firebase-3-x
+export const blockSignup = functions.auth.user().onCreate((event) => {
+  return admin
+    .auth()
+    .updateUser(event.uid, { disabled: true })
+    .then((userRecord) =>
+      console.log(`Auto blocked user: ${userRecord.toJSON()}`)
+    )
+    .catch((error) => console.log(`Error auto blocking: ${error}`));
 });
