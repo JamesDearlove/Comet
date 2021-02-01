@@ -149,7 +149,7 @@ export default function ResponsiveDrawer() {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap className={classes.title}>
-            JimmySocial
+            Comet
           </Typography>
           <AccountMenu />
         </Toolbar>

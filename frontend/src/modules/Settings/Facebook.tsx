@@ -173,8 +173,8 @@ const FacebookSetup = (props: {
         return (
           <>
             <Typography>
-              Please log in to Facebook and give JimmySocial permission to post
-              on your selected page.
+              Please log in to Facebook and give Comet permission to post on
+              your selected page.
             </Typography>
             <FacebookLogin
               appId="224158632347699"
@@ -206,7 +206,7 @@ const FacebookSetup = (props: {
         return (
           <>
             <Typography>
-              Select where you would like JimmySocial to post on Facebook.
+              Select where you would like Comet to post on Facebook.
             </Typography>
             <FormControl component="fieldset">
               <RadioGroup
@@ -246,8 +246,8 @@ const FacebookSetup = (props: {
         return (
           <>
             <Typography>
-              This is how JimmySocial will link to Facebook. If you are happy
-              with how these settings look, click finish.
+              This is how Comet will link to Facebook. If you are happy with how
+              these settings look, click finish.
             </Typography>
             <br />
             <Typography>Authorised Facebook user: {userName}</Typography>

@@ -102,7 +102,7 @@ function App() {
           <LockOutlined />
         </Avatar>
         <Typography component="h1" variant="h5">
-          JimmySocial
+          Comet
         </Typography>
         {loadingAuth ? (
           <CircularProgress className={classes.signInOptions} />
