@@ -4,6 +4,7 @@ import { useHistory, useParams } from "react-router-dom";
 import { createStyles, Theme, makeStyles } from "@material-ui/core/styles";
 import Button from "@material-ui/core/Button";
 import Checkbox from "@material-ui/core/Checkbox";
+import Collapse from "@material-ui/core/Collapse";
 import FormLabel from "@material-ui/core/FormLabel";
 import FormControl from "@material-ui/core/FormControl";
 import FormGroup from "@material-ui/core/FormGroup";
@@ -21,9 +22,17 @@ import SendIcon from "@material-ui/icons/Send";
 import CancelIcon from "@material-ui/icons/Cancel";
 import SaveIcon from "@material-ui/icons/Save";
 
+import DateFnsUtils from "@date-io/date-fns";
+import {
+  MuiPickersUtilsProvider,
+  KeyboardDateTimePicker,
+} from "@material-ui/pickers";
+
 interface IPostParams {
   postID: string;
 }
+
+const fieldValue = firebase.firestore.FieldValue;
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -66,24 +75,39 @@ const EditPost = () => {
     history.push("/posts");
   };
 
-  const saveClick = async () => {
-    await postsRef.update({ ...post });
-    history.push("/posts");
+  const savePost = async () => {
+    const scheduled =
+      post?.scheduled === undefined ? fieldValue.delete() : post.scheduled;
+    await postsRef.update({ ...post, scheduled: scheduled });
     enqueueSnackbar("Post saved", { variant: "success" });
-    // Send notification that it was saved
+  };
+
+  const saveClick = async () => {
+    await savePost();
+    history.push("/posts");
   };
 
   const postNowClick = async () => {
-    // setDisabled(true);
-    await postsRef.update({ ...post });
+    setDisabled(true);
+    await savePost();
     createPost();
   };
 
   const loadPost = async () => {
     postsRef
       .get()
-      .then((doc) => setPost(doc.data()))
+      .then((doc) => {
+        setPost({ ...doc.data(), scheduled: doc.data()?.scheduled?.toDate() });
+      })
       .catch(() => setPostLoadError(true));
+  };
+
+  const scheduledChecked = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.checked) {
+      setPost({ ...post, scheduled: new Date() });
+    } else {
+      setPost({ ...post, scheduled: undefined });
+    }
   };
 
   useEffect(() => {
@@ -133,7 +157,6 @@ const EditPost = () => {
                   <FormLabel component="legend">Post Locations</FormLabel>
                   <FormGroup>
                     <FormControlLabel
-                      // control={<Checkbox checked={gilad} onChange={handleChange} name="gilad" />}
                       control={
                         <Checkbox
                           name="facebook"
@@ -213,10 +236,36 @@ const EditPost = () => {
                   <FormLabel component="legend">Posting Method</FormLabel>
                   <FormGroup>
                     <FormControlLabel
-                      control={<Checkbox name="scheduled" />}
+                      control={
+                        <Checkbox
+                          name="scheduled"
+                          checked={post.scheduled !== undefined}
+                          onChange={scheduledChecked}
+                        />
+                      }
                       label="Schedule Post"
                     />
                   </FormGroup>
+                  <Collapse in={post.scheduled !== undefined}>
+                    <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                      <KeyboardDateTimePicker
+                        margin="dense"
+                        id="date-picker-dialog"
+                        label="Date"
+                        format="dd/MM/yyyy hh:mm a"
+                        value={post.scheduled}
+                        onChange={(date) =>
+                          setPost({
+                            ...post,
+                            scheduled: date,
+                          })
+                        }
+                        KeyboardButtonProps={{
+                          "aria-label": "change date",
+                        }}
+                      />
+                    </MuiPickersUtilsProvider>
+                  </Collapse>
                 </FormControl>
               </div>
               <Button
