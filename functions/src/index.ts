@@ -43,21 +43,26 @@ export const publishPost = functions.https.onCall(async (data, context) => {
     );
   }
 
-  const postRef = await admin.firestore().doc(`posts/${postID}`).get();
-  const postData = postRef.data();
+  // const postRef = await admin.firestore().doc(`posts/${postID}`).get();
+  // const postData = postRef.data();
+  const postRef = admin.firestore().doc(`posts/${postID}`);
+  const postData = await postRef.get();
 
   // Check if the post actually exists
-  if (postRef.exists && postData && context.auth) {
-    // if (postData.data().postedOn) {
-    //   throw new functions.https.HttpsError("already-exists", "Post was already published.");
-    // }
+  if (postData.exists && postData && context.auth) {
+    if (postData.data()?.postedOn) {
+      throw new functions.https.HttpsError(
+        "already-exists",
+        "Post was already published."
+      );
+    }
 
     // Check if the caller is the owner of the post
-    if (postData.ownerID !== context.auth?.uid) {
+    if (postData.data()?.ownerID !== context.auth?.uid) {
       throw new functions.https.HttpsError("not-found", "Post not found");
     }
 
-    const postToLocations = postData.postTo;
+    const postToLocations = postData.data()?.postTo;
 
     if (postToLocations.facebook) {
       await facebookPublishPost(postID);
@@ -70,6 +75,8 @@ export const publishPost = functions.https.onCall(async (data, context) => {
     if (postToLocations.slack) {
       await slackPublishPost(postID);
     }
+
+    await postRef.set({ postedOn: new Date() }, { merge: true });
   } else {
     throw new functions.https.HttpsError("not-found", "Post not found");
   }
@@ -77,7 +84,7 @@ export const publishPost = functions.https.onCall(async (data, context) => {
   return "Success";
 });
 
-// Disable user signups for now 
+// Disable user signups for now
 // https://stackoverflow.com/questions/38357554/how-to-disable-signup-in-firebase-3-x
 export const blockSignup = functions.auth.user().onCreate((event) => {
   return admin
