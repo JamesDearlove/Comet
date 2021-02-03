@@ -61,7 +61,6 @@ const PostList = () => {
       .get();
 
     const data = snapshot.docs.map((doc) => ({ id: doc.id, data: doc.data() }));
-    console.log(snapshot.docs.entries());
     setPostList(data);
   };
 

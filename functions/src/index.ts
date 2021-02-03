@@ -33,6 +33,42 @@ export const getPost = functions.https.onCall((data, context) => {
     });
 });
 
+/**
+ * Publishes a post.
+ *
+ * This method handles publishing to the respective platforms selected in a post.
+ * @param postID The post ID.
+ * @param postData The Firestore DocumentData for the post.
+ */
+const postPublisher = async (
+  postID: string,
+  postData: FirebaseFirestore.DocumentData | undefined
+) => {
+  if (!postData || postData?.posted) {
+    return;
+  }
+  functions.logger.log("Publishing post:", postID);
+
+  if (postData?.postTo?.facebook) {
+    await facebookPublishPost(postID);
+  }
+
+  if (postData?.postTo?.twitter) {
+    await twitterPublishPost(postID);
+  }
+
+  if (postData?.postTo?.slack) {
+    await slackPublishPost(postID);
+  }
+
+  const postRef = admin.firestore().doc(`posts/${postID}`);
+  await postRef.set(
+    { posted: true, postedOn: new Date(), scheduled: false },
+    { merge: true }
+  );
+  functions.logger.debug("Post published", postID);
+};
+
 export const publishPost = functions.https.onCall(async (data, context) => {
   const postID = data.postID;
 
@@ -43,8 +79,6 @@ export const publishPost = functions.https.onCall(async (data, context) => {
     );
   }
 
-  // const postRef = await admin.firestore().doc(`posts/${postID}`).get();
-  // const postData = postRef.data();
   const postRef = admin.firestore().doc(`posts/${postID}`);
   const postData = await postRef.get();
 
@@ -62,27 +96,34 @@ export const publishPost = functions.https.onCall(async (data, context) => {
       throw new functions.https.HttpsError("not-found", "Post not found");
     }
 
-    const postToLocations = postData.data()?.postTo;
-
-    if (postToLocations.facebook) {
-      await facebookPublishPost(postID);
-    }
-
-    if (postToLocations.twitter) {
-      await twitterPublishPost(postID);
-    }
-
-    if (postToLocations.slack) {
-      await slackPublishPost(postID);
-    }
-
-    await postRef.set({ postedOn: new Date() }, { merge: true });
+    postPublisher(postID, postData.data());
   } else {
     throw new functions.https.HttpsError("not-found", "Post not found");
   }
 
   return "Success";
 });
+
+export const scheduledPublishPost = functions.pubsub
+  .schedule("every 1 minute")
+  .onRun(async (context) => {
+    functions.logger.debug("Running publish post schedule task.");
+    const postRef = admin.firestore().collection("posts");
+
+    const timeRange = new Date();
+    timeRange.setMinutes(timeRange.getMinutes() - 30);
+    const currentTime = new Date();
+
+    const scheduledPosts = await postRef
+      .where("scheduled", "==", true)
+      .where("scheduledFor", "<=", currentTime);
+
+    const getP = await scheduledPosts.get();
+    getP.docs.forEach((post) => postPublisher(post.id, post.data()));
+    functions.logger.debug("Finished publish post schedule task.");
+
+    return null;
+  });
 
 // Disable user signups for now
 // https://stackoverflow.com/questions/38357554/how-to-disable-signup-in-firebase-3-x

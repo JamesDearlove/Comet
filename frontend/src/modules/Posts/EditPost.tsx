@@ -18,9 +18,10 @@ import { useSnackbar } from "notistack";
 
 import firebase from "firebase";
 
-import SendIcon from "@material-ui/icons/Send";
 import CancelIcon from "@material-ui/icons/Cancel";
 import SaveIcon from "@material-ui/icons/Save";
+import ScheduleIcon from "@material-ui/icons/Schedule";
+import SendIcon from "@material-ui/icons/Send";
 
 import DateFnsUtils from "@date-io/date-fns";
 import {
@@ -71,14 +72,26 @@ const EditPost = () => {
       );
   };
 
+  const saveScheduleClick = () => {
+    // setPost({ ...post, scheduled: true });
+    savePost({ scheduled: true });
+    history.push("/posts");
+  };
+
   const cancelClick = () => {
     history.push("/posts");
   };
 
-  const savePost = async () => {
-    const scheduled =
-      post?.scheduled === undefined ? fieldValue.delete() : post.scheduled;
-    await postsRef.update({ ...post, scheduled: scheduled });
+  const savePost = async (additionalProps?: any) => {
+    const scheduledFor =
+      post?.scheduledFor === undefined
+        ? fieldValue.delete()
+        : post.scheduledFor;
+    await postsRef.update({
+      ...post,
+      ...additionalProps,
+      scheduledFor: scheduledFor,
+    });
     enqueueSnackbar("Post saved", { variant: "success" });
   };
 
@@ -97,16 +110,19 @@ const EditPost = () => {
     postsRef
       .get()
       .then((doc) => {
-        setPost({ ...doc.data(), scheduled: doc.data()?.scheduled?.toDate() });
+        setPost({
+          ...doc.data(),
+          scheduledFor: doc.data()?.scheduledFor?.toDate(),
+        });
       })
       .catch(() => setPostLoadError(true));
   };
 
-  const scheduledChecked = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const scheduledForChecked = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
-      setPost({ ...post, scheduled: new Date() });
+      setPost({ ...post, scheduledFor: new Date() });
     } else {
-      setPost({ ...post, scheduled: undefined });
+      setPost({ ...post, scheduledFor: undefined });
     }
   };
 
@@ -238,26 +254,26 @@ const EditPost = () => {
                     <FormControlLabel
                       control={
                         <Checkbox
-                          name="scheduled"
-                          checked={post.scheduled !== undefined}
-                          onChange={scheduledChecked}
+                          name="scheduledFor"
+                          checked={post.scheduledFor !== undefined}
+                          onChange={scheduledForChecked}
                         />
                       }
                       label="Schedule Post"
                     />
                   </FormGroup>
-                  <Collapse in={post.scheduled !== undefined}>
+                  <Collapse in={post.scheduledFor !== undefined}>
                     <MuiPickersUtilsProvider utils={DateFnsUtils}>
                       <KeyboardDateTimePicker
                         margin="dense"
                         id="date-picker-dialog"
                         label="Date"
                         format="dd/MM/yyyy hh:mm a"
-                        value={post.scheduled}
+                        value={post.scheduledFor}
                         onChange={(date) =>
                           setPost({
                             ...post,
-                            scheduled: date,
+                            scheduledFor: date,
                           })
                         }
                         KeyboardButtonProps={{
@@ -296,6 +312,15 @@ const EditPost = () => {
                   onClick={saveClick}
                 >
                   Save Draft
+                </Button>
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  className={classes.button}
+                  endIcon={<ScheduleIcon />}
+                  onClick={saveScheduleClick}
+                >
+                  Save &amp; Schedule
                 </Button>
               </div>
             </Grid>
