@@ -52,12 +52,41 @@ const EditPost = () => {
   const { postID } = useParams<IPostParams>();
   const { enqueueSnackbar } = useSnackbar();
 
+  const newPost = postID === "new";
+  const userID = firebase.auth().currentUser?.uid;
+
   const [post, setPost] = useState<firebase.firestore.DocumentData>();
   const [postLoadError, setPostLoadError] = useState(false);
 
-  const postsRef = firebase.firestore().collection("posts").doc(postID);
+  const [postRef, setPostRef] = useState<
+    firebase.firestore.DocumentReference<firebase.firestore.DocumentData>
+  >();
 
   const [disabled, setDisabled] = useState(false);
+
+  useEffect(() => {
+    const loadPost = async () => {
+      const collectionRef = firebase.firestore().collection("posts");
+      const postRef = newPost ? collectionRef.doc() : collectionRef.doc(postID);
+      setPostRef(postRef);
+
+      if (newPost) {
+        setPost({ title: "", content: "", ownerID: userID });
+      } else {
+        postRef
+          ?.get()
+          .then((doc) => {
+            setPost({
+              ...doc.data(),
+              scheduledFor: doc.data()?.scheduledFor?.toDate(),
+            });
+          })
+          .catch(() => setPostLoadError(true));
+      }
+    };
+
+    loadPost();
+  }, []);
 
   const createPost = () => {
     var facebookPost = firebase.functions().httpsCallable("publishPost");
@@ -87,11 +116,14 @@ const EditPost = () => {
       post?.scheduledFor === undefined
         ? fieldValue.delete()
         : post.scheduledFor;
-    await postsRef.update({
-      ...post,
-      ...additionalProps,
-      scheduledFor: scheduledFor,
-    });
+    await postRef?.set(
+      {
+        ...post,
+        ...additionalProps,
+        scheduledFor: scheduledFor,
+      },
+      { merge: true }
+    );
     enqueueSnackbar("Post saved", { variant: "success" });
   };
 
@@ -106,18 +138,6 @@ const EditPost = () => {
     createPost();
   };
 
-  const loadPost = async () => {
-    postsRef
-      .get()
-      .then((doc) => {
-        setPost({
-          ...doc.data(),
-          scheduledFor: doc.data()?.scheduledFor?.toDate(),
-        });
-      })
-      .catch(() => setPostLoadError(true));
-  };
-
   const scheduledForChecked = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
       setPost({ ...post, scheduledFor: new Date() });
@@ -125,10 +145,6 @@ const EditPost = () => {
       setPost({ ...post, scheduledFor: undefined });
     }
   };
-
-  useEffect(() => {
-    loadPost();
-  }, []);
 
   return (
     <>

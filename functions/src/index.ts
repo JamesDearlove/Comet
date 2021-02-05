@@ -96,7 +96,7 @@ export const publishPost = functions.https.onCall(async (data, context) => {
       throw new functions.https.HttpsError("not-found", "Post not found");
     }
 
-    postPublisher(postID, postData.data());
+    await postPublisher(postID, postData.data());
   } else {
     throw new functions.https.HttpsError("not-found", "Post not found");
   }
@@ -105,7 +105,7 @@ export const publishPost = functions.https.onCall(async (data, context) => {
 });
 
 export const scheduledPublishPost = functions.pubsub
-  .schedule("every 1 minute")
+  .schedule("*/5 * * * *")
   .onRun(async (context) => {
     functions.logger.debug("Running publish post schedule task.");
     const postRef = admin.firestore().collection("posts");

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useHistory, Link } from "react-router-dom";
 
 import { createStyles, Theme, makeStyles } from "@material-ui/core/styles";
 import Fab from "@material-ui/core/Fab";
@@ -48,6 +48,7 @@ const PostItem = (props: { id: string; data: any }) => {
 
 const PostList = () => {
   const classes = useStyles();
+  const history = useHistory();
 
   const [postList, setPostList] = useState<IPostItem[]>();
 
@@ -68,6 +69,10 @@ const PostList = () => {
     loadPosts();
   }, []);
 
+  const newPostClick = () => {
+    history.push("posts/new");
+  };
+
   return (
     <>
       <Typography variant="h4">Posts</Typography>
@@ -80,7 +85,12 @@ const PostList = () => {
           ))}
         </List>
       )}
-      <Fab className={classes.fab} color="primary" aria-label="add">
+      <Fab
+        className={classes.fab}
+        color="primary"
+        aria-label="add"
+        onClick={newPostClick}
+      >
         <AddIcon />
       </Fab>
     </>
