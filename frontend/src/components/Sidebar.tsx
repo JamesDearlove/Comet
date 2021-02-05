@@ -125,8 +125,8 @@ export default function ResponsiveDrawer() {
       <div className={classes.toolbar} />
       <Divider />
       <List>
-        {Pages.map((item) => (
-          <ListItem button component={Link} to={item.path}>
+        {Pages.map((item, index) => (
+          <ListItem key={index} button component={Link} to={item.path}>
             <ListItemIcon>{item.icon}</ListItemIcon>
             <ListItemText primary={item.name} />
           </ListItem>

@@ -13,43 +13,47 @@ const TwitterAuth = () => {
   const { enqueueSnackbar } = useSnackbar();
   let query = useQuery();
 
-  const oauth_token = query.get("oauth_token");
-  const oauth_verifier = query.get("oauth_verifier");
-
   useEffect(() => {
-    var twitterLogin = firebase.functions().httpsCallable("twitterUserLogin");
-    twitterLogin({
-      oauth_token: oauth_token,
-      oauth_verifier: oauth_verifier,
-    })
-      .then((result) => {
-        if (result.data === "Success") {
-          enqueueSnackbar("Successfully authenticated with Twitter.", {
-            variant: "success",
-          });
-        } else {
+    const performAuth = () => {
+      const oauth_token = query.get("oauth_token");
+      const oauth_verifier = query.get("oauth_verifier");
+
+      var twitterLogin = firebase.functions().httpsCallable("twitterUserLogin");
+      twitterLogin({
+        oauth_token: oauth_token,
+        oauth_verifier: oauth_verifier,
+      })
+        .then((result) => {
+          if (result.data === "Success") {
+            enqueueSnackbar("Successfully authenticated with Twitter.", {
+              variant: "success",
+            });
+          } else {
+            enqueueSnackbar(
+              "Failed to authenticated with Twitter. Please try again.",
+              {
+                variant: "error",
+              }
+            );
+          }
+          setLoading(false);
+        })
+        .catch((result) => {
+          //TODO: Make more verbose
+          console.log(result);
           enqueueSnackbar(
             "Failed to authenticated with Twitter. Please try again.",
             {
               variant: "error",
             }
           );
-        }
-        setLoading(false);
-      })
-      .catch((result) => {
-        //TODO: Make more verbose
-        console.log(result);
-        enqueueSnackbar(
-          "Failed to authenticated with Twitter. Please try again.",
-          {
-            variant: "error",
-          }
-        );
 
-        setLoading(false);
-      });
-  }, []);
+          setLoading(false);
+        });
+    };
+
+    performAuth();
+  }, [query, enqueueSnackbar]);
 
   return (
     <>

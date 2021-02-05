@@ -141,7 +141,11 @@ function App() {
                 <div className={classes.toolbar} />
                 <Switch>
                   {Pages.map((item) => (
-                    <Route {...item.routeProps} path={item.path} />
+                    <Route
+                      key={item.name}
+                      {...item.routeProps}
+                      path={item.path}
+                    />
                   ))}
                   <Route path="/auth">
                     <Auth />

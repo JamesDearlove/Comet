@@ -52,20 +52,23 @@ const PostList = () => {
 
   const [postList, setPostList] = useState<IPostItem[]>();
 
-  const userUid = firebase.auth().currentUser?.uid;
-  const postsRef = firebase.firestore().collection("posts");
-
-  const loadPosts = async () => {
-    const snapshot = await postsRef
-      .where("ownerID", "==", userUid)
-      .limit(20)
-      .get();
-
-    const data = snapshot.docs.map((doc) => ({ id: doc.id, data: doc.data() }));
-    setPostList(data);
-  };
-
   useEffect(() => {
+    const loadPosts = async () => {
+      const userUid = firebase.auth().currentUser?.uid;
+      const postsRef = firebase.firestore().collection("posts");
+
+      const snapshot = await postsRef
+        .where("ownerID", "==", userUid)
+        .limit(20)
+        .get();
+
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        data: doc.data(),
+      }));
+      setPostList(data);
+    };
+
     loadPosts();
   }, []);
 
@@ -81,7 +84,7 @@ const PostList = () => {
       ) : (
         <List className={classes.list}>
           {postList?.map((item) => (
-            <PostItem {...item} />
+            <PostItem key={item.id} {...item} />
           ))}
         </List>
       )}

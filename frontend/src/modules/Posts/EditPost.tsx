@@ -52,11 +52,10 @@ const EditPost = () => {
   const { postID } = useParams<IPostParams>();
   const { enqueueSnackbar } = useSnackbar();
 
-  const newPost = postID === "new";
-  const userID = firebase.auth().currentUser?.uid;
-
   const [post, setPost] = useState<firebase.firestore.DocumentData>();
   const [postLoadError, setPostLoadError] = useState(false);
+  // For new post state
+  // const [newPost, setNewPost] = useState(false);
 
   const [postRef, setPostRef] = useState<
     firebase.firestore.DocumentReference<firebase.firestore.DocumentData>
@@ -66,8 +65,12 @@ const EditPost = () => {
 
   useEffect(() => {
     const loadPost = async () => {
+      const newPost = postID === "new";
+      const userID = firebase.auth().currentUser?.uid;
+
       const collectionRef = firebase.firestore().collection("posts");
       const postRef = newPost ? collectionRef.doc() : collectionRef.doc(postID);
+
       setPostRef(postRef);
 
       if (newPost) {
@@ -86,7 +89,7 @@ const EditPost = () => {
     };
 
     loadPost();
-  }, []);
+  }, [postID]);
 
   const createPost = () => {
     var facebookPost = firebase.functions().httpsCallable("publishPost");
@@ -310,7 +313,7 @@ const EditPost = () => {
                 Post Now
               </Button>
             </Grid>
-            <Grid xs={12}>
+            <Grid item xs={12}>
               <div>
                 <Button
                   variant="contained"
