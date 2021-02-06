@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Redirect } from "react-router-dom";
-import firebase from "firebase";
+import firebase from "firebase/app";
 
 import { useQuery } from "./index";
 

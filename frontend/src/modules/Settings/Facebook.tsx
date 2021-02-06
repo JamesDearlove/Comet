@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import firebase from "firebase";
+import firebase from "firebase/app";
 
 import { makeStyles, Theme, createStyles } from "@material-ui/core";
 import Button from "@material-ui/core/Button";

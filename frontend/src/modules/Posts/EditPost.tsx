@@ -16,7 +16,7 @@ import Typography from "@material-ui/core/Typography";
 
 import { useSnackbar } from "notistack";
 
-import firebase from "firebase";
+import firebase from "firebase/app";
 
 import CancelIcon from "@material-ui/icons/Cancel";
 import SaveIcon from "@material-ui/icons/Save";

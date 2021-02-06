@@ -2,7 +2,7 @@ import React from "react";
 
 import Typography from "@material-ui/core/Typography";
 
-import firebase from "firebase";
+import firebase from "firebase/app";
 
 const HomePage = () => {
   return (

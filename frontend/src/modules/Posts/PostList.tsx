@@ -8,7 +8,7 @@ import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
 import Typography from "@material-ui/core/Typography";
 
-import firebase from "firebase";
+import firebase from "firebase/app";
 
 import AddIcon from "@material-ui/icons/Add";
 import { LinearProgress } from "@material-ui/core";

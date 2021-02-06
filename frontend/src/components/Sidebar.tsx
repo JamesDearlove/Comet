@@ -24,7 +24,7 @@ import {
 import AccountCircle from "@material-ui/icons/AccountCircle";
 import MenuIcon from "@material-ui/icons/Menu";
 
-import firebase from "firebase";
+import firebase from "firebase/app";
 import Pages from "./Pages";
 
 const drawerWidth = 240;
