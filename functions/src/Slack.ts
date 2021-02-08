@@ -56,7 +56,7 @@ export const slackUserLogin = functions.https.onCall(async (data, context) => {
   // TODO: Update to not default to announcements channel
   const access_token = (result as any).authed_user.access_token;
   if (access_token) {
-    admin
+    await admin
       .firestore()
       .doc(`tokens/${context.auth?.uid}`)
       .update({
