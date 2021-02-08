@@ -4,6 +4,7 @@ import Typography from "@material-ui/core/Typography";
 
 import FacebookSettings from "./Facebook";
 import TwitterSettings from "./Twitter";
+import SlackSettings from "./Slack";
 
 const SettingsPage = () => {
   return (
@@ -11,6 +12,7 @@ const SettingsPage = () => {
       <Typography variant="h4">Settings</Typography>
       <FacebookSettings />
       <TwitterSettings />
+      <SlackSettings />
     </>
   );
 };

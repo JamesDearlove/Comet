@@ -8,7 +8,10 @@ const CLIENT_SECRET = functions.config().slack.clientsecret;
 // const SIGNING_SECRET = functions.config().slack.signingsecret;
 
 // TODO: Enable OAuth
-const getClient = async (authUid: string) => {
+const getClient = async (authUid?: string) => {
+  if (!authUid) {
+    return { client: new slack.WebClient() };
+  }
   const tokenData = await admin.firestore().doc(`tokens/${authUid}`).get();
 
   if (!tokenData.data()?.slack?.token) {
@@ -56,7 +59,9 @@ export const slackUserLogin = functions.https.onCall(async (data, context) => {
     admin
       .firestore()
       .doc(`tokens/${context.auth?.uid}`)
-      .update({ slack: { token: access_token, defaultChannel: "announcements" } });
+      .update({
+        slack: { token: access_token, defaultChannel: "announcements" },
+      });
   }
 
   return "Success";
@@ -66,9 +71,25 @@ export const slackUserLogout = functions.https.onCall(() => {
   throw new functions.https.HttpsError("unimplemented", "Unimplemented");
 });
 
-export const slackVerifyToken = functions.https.onCall(() => {
-  throw new functions.https.HttpsError("unimplemented", "Unimplemented");
-});
+export const slackVerifyToken = functions.https.onCall(
+  async (data, context) => {
+    const { client } = await getClient(context.auth?.uid);
+
+    let result;
+    try {
+      result = await client.auth.test();
+    } catch {
+      return { setup: false, reason: "Your Slack token is no longer valid." };
+    }
+
+    return {
+      setup: true,
+      reason: "Your Slack token is valid",
+      team: result.team,
+      user: result.user,
+    };
+  }
+);
 
 export const slackPublishPost = async (postID: string) => {
   const postRef = admin.firestore().doc(`posts/${postID}`);
@@ -86,7 +107,7 @@ export const slackPublishPost = async (postID: string) => {
         text: postData.data()?.content,
       });
     } catch {
-      functions.logger.warn("Error posting to Slack, ", result)
+      functions.logger.warn("Error posting to Slack, ", result);
       throw new functions.https.HttpsError(
         "permission-denied",
         "Unable to post to Slack"

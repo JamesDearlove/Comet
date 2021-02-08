@@ -16,17 +16,14 @@ const SlackSettings = () => {
   const [userData, setUserData] = useState<any>({});
 
   useEffect(() => {
-    // firebase
-    //   .functions()
-    //   .httpsCallable("twitterVerifyToken")()
-    //   .then((res) => {
-    //     setUserData(res.data);
-    //     setLoading(false);
-    //   });
-    setLoading(false);
+    firebase
+      .functions()
+      .httpsCallable("slackVerifyToken")()
+      .then((res) => {
+        setUserData(res.data);
+        setLoading(false);
+      });
   }, []);
-
-  const twitterLogin = firebase.functions().httpsCallable("slackLoginRequest");
 
   //TODO: Fires twice
   const startLogin = async () => {
@@ -45,9 +42,9 @@ const SlackSettings = () => {
           <Typography variant="body1">
             {userData.setup ? <CheckIcon /> : <InfoIcon />} {userData?.reason}
           </Typography>
-          {userData?.screen_name && (
+          {userData?.user && (
             <Typography variant="body1">
-              Logged in as: @{userData?.screen_name}
+              Logged in as {userData?.user} to {userData?.team}
             </Typography>
           )}
           <Button
