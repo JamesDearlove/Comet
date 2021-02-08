@@ -8,29 +8,27 @@ import CircularProgress from "@material-ui/core/CircularProgress";
 import Typography from "@material-ui/core/Typography";
 import { useSnackbar } from "notistack";
 
-const TwitterAuth = () => {
+const SlackAuth = () => {
   const [loading, setLoading] = useState(true);
   const { enqueueSnackbar } = useSnackbar();
   let query = useQuery();
 
   useEffect(() => {
     const performAuth = () => {
-      const oauth_token = query.get("oauth_token");
-      const oauth_verifier = query.get("oauth_verifier");
+      const oauth_code = query.get("code");
 
-      var twitterLogin = firebase.functions().httpsCallable("twitterUserLogin");
-      twitterLogin({
-        oauth_token: oauth_token,
-        oauth_verifier: oauth_verifier,
+      var slackLogin = firebase.functions().httpsCallable("slackUserLogin");
+      slackLogin({
+        oauth_code: oauth_code,
       })
         .then((result) => {
           if (result.data === "Success") {
-            enqueueSnackbar("Successfully authenticated with Twitter.", {
+            enqueueSnackbar("Successfully authenticated with Slack.", {
               variant: "success",
             });
           } else {
             enqueueSnackbar(
-              "Failed to authenticated with Twitter. Please try again.",
+              "Failed to authenticated with Slack. Please try again.",
               {
                 variant: "error",
               }
@@ -42,7 +40,7 @@ const TwitterAuth = () => {
           //TODO: Make more verbose
           console.log(result);
           enqueueSnackbar(
-            "Failed to authenticated with Twitter. Please try again.",
+            "Failed to authenticated with Slack. Please try again.",
             {
               variant: "error",
             }
@@ -59,7 +57,7 @@ const TwitterAuth = () => {
     <>
       {loading ? (
         <>
-          <Typography variant="h5">Authenticating with Twitter</Typography>
+          <Typography variant="h5">Authenticating with Slack</Typography>
           <CircularProgress />
         </>
       ) : (
@@ -69,4 +67,4 @@ const TwitterAuth = () => {
   );
 };
 
-export default TwitterAuth;
+export default SlackAuth;

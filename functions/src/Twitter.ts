@@ -8,7 +8,7 @@ const API_VERSION = "1.1";
 const CONSUMER_KEY = functions.config().twitter.consumerkey;
 const CONSUMER_SECRET = functions.config().twitter.consumersecret;
 
-const OAUTH_CALLBACK_URL = "https://localhost:3000/auth/twitter";
+const OAUTH_CALLBACK_URL = "https://comet.jimmyd.dev/auth/twitter";
 
 const getClient = async (authenticated: boolean, authUid?: string) => {
   let clientConfig: any = {
@@ -55,6 +55,10 @@ export const twitterLoginRequest = functions.https.onCall(
 
     if (!response || !response.oauth_callback_confirmed) {
       // Something went wrong
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "Unable to request login token from Twitter."
+      );
     }
 
     await admin

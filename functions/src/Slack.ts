@@ -3,7 +3,9 @@ import * as admin from "firebase-admin";
 
 import * as slack from "@slack/web-api";
 
-// const CLIENT_ID = functions.config().slack.clientid;
+const CLIENT_ID = functions.config().slack.clientid;
+const CLIENT_SECRET = functions.config().slack.clientsecret;
+// const SIGNING_SECRET = functions.config().slack.signingsecret;
 
 // TODO: Enable OAuth
 const getClient = async (authUid: string) => {
@@ -20,12 +22,44 @@ const getClient = async (authUid: string) => {
   return { client, defaultChannel: tokenData.data()?.slack?.defaultChannel };
 };
 
-export const slackLoginRequest = functions.https.onCall(() => {
-  throw new functions.https.HttpsError("unimplemented", "Unimplemented");
-});
+/**
+ * Complete OAuth flow with provided user code.
+ */
+export const slackUserLogin = functions.https.onCall(async (data, context) => {
+  const oauth_code = data.oauth_code;
 
-export const slackUserLogin = functions.https.onCall(() => {
-  throw new functions.https.HttpsError("unimplemented", "Unimplemented");
+  if (!oauth_code) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "Invalid code provided."
+    );
+  }
+
+  const client = new slack.WebClient();
+  const result = await client.oauth.v2.access({
+    client_id: CLIENT_ID,
+    client_secret: CLIENT_SECRET,
+    code: oauth_code,
+  });
+
+  if (result.error) {
+    functions.logger.debug("Slack auth failed ", result.error);
+    throw new functions.https.HttpsError(
+      "permission-denied",
+      "Slack denied the request."
+    );
+  }
+
+  // TODO: Update to not default to announcements channel
+  const access_token = (result as any).authed_user.access_token;
+  if (access_token) {
+    admin
+      .firestore()
+      .doc(`tokens/${context.auth?.uid}`)
+      .update({ slack: { token: access_token, defaultChannel: "announcements" } });
+  }
+
+  return "Success";
 });
 
 export const slackUserLogout = functions.https.onCall(() => {
@@ -45,12 +79,14 @@ export const slackPublishPost = async (postID: string) => {
       postData.data()?.ownerID
     );
 
+    let result;
     try {
-      await client.chat.postMessage({
+      result = client.chat.postMessage({
         channel: defaultChannel,
         text: postData.data()?.content,
       });
     } catch {
+      functions.logger.warn("Error posting to Slack, ", result)
       throw new functions.https.HttpsError(
         "permission-denied",
         "Unable to post to Slack"
