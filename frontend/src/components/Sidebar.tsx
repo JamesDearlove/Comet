@@ -21,11 +21,11 @@ import {
   createStyles,
 } from "@material-ui/core/styles";
 
-import AccountCircle from "@material-ui/icons/AccountCircle";
 import MenuIcon from "@material-ui/icons/Menu";
 
 import firebase from "firebase/app";
 import Pages from "./Pages";
+import { Avatar } from "@material-ui/core";
 
 const drawerWidth = 240;
 
@@ -74,9 +74,11 @@ function AccountMenu() {
   };
 
   const handleSignOut = () => {
-    firebase.auth().signOut();
     handleClose();
+    firebase.auth().signOut();
   };
+
+  const { displayName, photoURL } = firebase.auth().currentUser as any;
 
   return (
     <div>
@@ -87,20 +89,17 @@ function AccountMenu() {
         onClick={handleMenu}
         color="inherit"
       >
-        <AccountCircle />
+        <Avatar alt={displayName} src={photoURL} />
       </IconButton>
       <Menu
         id="menu-appbar"
+        getContentAnchorEl={null}
         anchorEl={anchorEl}
         anchorOrigin={{
-          vertical: "top",
-          horizontal: "right",
+          vertical: "bottom",
+          horizontal: "center",
         }}
         keepMounted
-        transformOrigin={{
-          vertical: "top",
-          horizontal: "right",
-        }}
         open={open}
         onClose={handleClose}
       >
