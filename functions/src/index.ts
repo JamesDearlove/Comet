@@ -8,6 +8,7 @@ import { slackPublishPost } from "./Slack";
 export * from "./Facebook";
 export * from "./Twitter";
 export * from "./Slack";
+export * from "./LinkedIn";
 
 admin.initializeApp();
 
