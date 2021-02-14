@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useHistory, Link } from "react-router-dom";
+import { useLocation, useHistory, Link } from "react-router-dom";
 
 import Button from "@material-ui/core/Button";
 import Dialog from "@material-ui/core/Dialog";
@@ -96,6 +96,7 @@ interface ExtraActionsProps {
 const ExtraActions = ({ postRef, postData, onDeleted }: ExtraActionsProps) => {
   const { enqueueSnackbar } = useSnackbar();
   const history = useHistory();
+  const location = useLocation();
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -130,6 +131,9 @@ const ExtraActions = ({ postRef, postData, onDeleted }: ExtraActionsProps) => {
     onDeleted();
     setDeleteRunning(false);
     handleDeleteDialogClose();
+    if (location.pathname !== "/posts") {
+      history.push("/posts");
+    }
   };
 
   const handleDeleteDialogClose = () => {

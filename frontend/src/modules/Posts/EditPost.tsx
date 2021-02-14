@@ -28,6 +28,7 @@ import {
   MuiPickersUtilsProvider,
   KeyboardDateTimePicker,
 } from "@material-ui/pickers";
+import ExtraActions from "./ExtraActions";
 
 interface IPostParams {
   postID: string;
@@ -55,7 +56,7 @@ const EditPost = () => {
   const [post, setPost] = useState<firebase.firestore.DocumentData>();
   const [postLoadError, setPostLoadError] = useState(false);
   // For new post state
-  // const [newPost, setNewPost] = useState(false);
+  const [newPost, setNewPost] = useState(false);
 
   const [postRef, setPostRef] = useState<
     firebase.firestore.DocumentReference<firebase.firestore.DocumentData>
@@ -75,16 +76,18 @@ const EditPost = () => {
 
       if (newPost) {
         setPost({ title: "", content: "", ownerID: userID });
+        setNewPost(true);
       } else {
-        postRef
-          ?.get()
-          .then((doc) => {
-            setPost({
-              ...doc.data(),
-              scheduledFor: doc.data()?.scheduledFor?.toDate(),
-            });
-          })
-          .catch(() => setPostLoadError(true));
+        try {
+          const postData = await postRef?.get();
+          setPost({
+            ...postData.data(),
+            scheduledFor: postData.data()?.scheduledFor?.toDate(),
+          });
+          setDisabled(postData.data()?.posted);
+        } catch (error) {
+          setPostLoadError(true);
+        }
       }
     };
 
@@ -160,7 +163,8 @@ const EditPost = () => {
       ) : (
         <>
           <Typography variant="h4">
-            Editing {post.title ? post.title : "Untitled Post"}
+            {disabled ? "Viewing" : "Editing"}{" "}
+            {post.title ? post.title : "Untitled Post"}
           </Typography>
           <Grid container spacing={3}>
             <Grid item xs={12} md={8}>
@@ -172,6 +176,7 @@ const EditPost = () => {
                 label="Post Title"
                 value={post.title}
                 onChange={(e) => setPost({ ...post, title: e.target.value })}
+                disabled={disabled}
               />
               <TextField
                 margin="normal"
@@ -184,11 +189,12 @@ const EditPost = () => {
                 value={post.content}
                 onChange={(e) => setPost({ ...post, content: e.target.value })}
                 helperText={`${post.content.length}/280 (Twitter Character Limit)`}
+                disabled={disabled}
               />
             </Grid>
             <Grid item xs={12} md={4}>
               <div>
-                <FormControl component="fieldset">
+                <FormControl component="fieldset" disabled={disabled}>
                   <FormLabel component="legend">Post Locations</FormLabel>
                   <FormGroup>
                     <FormControlLabel
@@ -267,7 +273,11 @@ const EditPost = () => {
                 </FormControl>
               </div>
               <div>
-                <FormControl margin="dense" component="fieldset">
+                <FormControl
+                  margin="dense"
+                  component="fieldset"
+                  disabled={disabled}
+                >
                   <FormLabel component="legend">Posting Method</FormLabel>
                   <FormGroup>
                     <FormControlLabel
@@ -289,6 +299,7 @@ const EditPost = () => {
                         label="Date"
                         format="dd/MM/yyyy hh:mm a"
                         value={post.scheduledFor}
+                        disabled={disabled}
                         onChange={(date) =>
                           setPost({
                             ...post,
@@ -314,34 +325,52 @@ const EditPost = () => {
               </Button>
             </Grid>
             <Grid item xs={12}>
-              <div>
+              {disabled ? (
                 <Button
                   variant="contained"
                   className={classes.button}
                   endIcon={<CancelIcon />}
                   onClick={cancelClick}
                 >
-                  Cancel
+                  Close
                 </Button>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  className={classes.button}
-                  endIcon={<SaveIcon />}
-                  onClick={saveClick}
-                >
-                  Save Draft
-                </Button>
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  className={classes.button}
-                  endIcon={<ScheduleIcon />}
-                  onClick={saveScheduleClick}
-                >
-                  Save &amp; Schedule
-                </Button>
-              </div>
+              ) : (
+                <>
+                  <Button
+                    variant="contained"
+                    className={classes.button}
+                    endIcon={<CancelIcon />}
+                    onClick={cancelClick}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    className={classes.button}
+                    endIcon={<SaveIcon />}
+                    onClick={saveClick}
+                  >
+                    Save Draft
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    className={classes.button}
+                    endIcon={<ScheduleIcon />}
+                    onClick={saveScheduleClick}
+                  >
+                    Save &amp; Schedule
+                  </Button>
+                </>
+              )}
+              {!newPost && (
+                <ExtraActions
+                  postData={post}
+                  postRef={postRef}
+                  onDeleted={() => {}}
+                />
+              )}
             </Grid>
           </Grid>
         </>
