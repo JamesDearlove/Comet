@@ -30,7 +30,7 @@ const LinkedInSettings = () => {
     const clientId = process.env.REACT_APP_LINKEDIN_ID;
     const scope =
       "rw_organization_admin,r_organization_social,w_organization_social,r_liteprofile";
-    const redirectURI = "https://comet.jimmyd.dev:3000/auth/linkedin";
+    const redirectURI = "https://comet.jimmyd.dev/auth/linkedin";
     window.location.href = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${redirectURI}&scope=${scope}`;
   };
 

@@ -11,7 +11,7 @@ const URN_PREFIX = {
 const CLIENT_ID = functions.config().linkedin.clientid;
 const CLIENT_SECRET = functions.config().linkedin.clientsecret;
 
-const REDIRECT_URI = "https://comet.jimmyd.dev:3000/auth/linkedin";
+const REDIRECT_URI = "https://comet.jimmyd.dev/auth/linkedin";
 
 const axiosClient = axios.create({ baseURL: "https://api.linkedin.com/v2/" });
 
