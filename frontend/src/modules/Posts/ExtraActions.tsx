@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useHistory, Link } from "react-router-dom";
 
 import Button from "@material-ui/core/Button";
 import Dialog from "@material-ui/core/Dialog";
@@ -16,6 +17,7 @@ import red from "@material-ui/core/colors/red";
 import { makeStyles, Theme, createStyles } from "@material-ui/core/styles";
 
 import { useSnackbar } from "notistack";
+import firebase from "firebase";
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -93,6 +95,7 @@ interface ExtraActionsProps {
 
 const ExtraActions = ({ postRef, postData, onDeleted }: ExtraActionsProps) => {
   const { enqueueSnackbar } = useSnackbar();
+  const history = useHistory();
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -108,7 +111,7 @@ const ExtraActions = ({ postRef, postData, onDeleted }: ExtraActionsProps) => {
     setAnchorEl(null);
   };
 
-  const handleDeleteDialogOpen = () => {
+  const handleDeleteClick = () => {
     setDeleteOpen(true);
     handleMenuClose();
   };
@@ -133,6 +136,33 @@ const ExtraActions = ({ postRef, postData, onDeleted }: ExtraActionsProps) => {
     setDeleteOpen(false);
   };
 
+  const handleDuplicateClick = async () => {
+    // TODO: This can be improved a bit, but this is an ok solution for the moment.
+
+    handleMenuClose();
+    try {
+      const data = postData;
+
+      // Cleanup of publish data and reset to draft.
+      data.title = `Copy of ${data.title}`;
+      delete data.posted;
+      delete data.postedOn;
+      delete data.scheduled;
+      delete data.scheduledFor;
+
+      const docId = firebase.firestore().collection("posts").doc();
+      await docId.set({ ...data });
+      enqueueSnackbar(`Post duplicated as ${data.title}.`, {
+        variant: "success",
+      });
+      history.push(`/posts/${docId.id}`);
+    } catch (error) {
+      enqueueSnackbar(`Unable to duplicate post. Please try again`, {
+        variant: "error",
+      });
+    }
+  };
+
   return (
     <>
       <Tooltip title="Post Options">
@@ -148,8 +178,8 @@ const ExtraActions = ({ postRef, postData, onDeleted }: ExtraActionsProps) => {
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
       >
-        <MenuItem onClick={handleMenuClose}>Duplicate</MenuItem>
-        <MenuItem onClick={handleDeleteDialogOpen}>Delete</MenuItem>
+        <MenuItem onClick={handleDuplicateClick}>Duplicate</MenuItem>
+        <MenuItem onClick={handleDeleteClick}>Delete</MenuItem>
       </Menu>
       <DeleteDialog
         postTitle={postData.title}
