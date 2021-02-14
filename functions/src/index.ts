@@ -4,6 +4,7 @@ import * as admin from "firebase-admin";
 import { facebookPublishPost } from "./Facebook";
 import { twitterPublishPost } from "./Twitter";
 import { slackPublishPost } from "./Slack";
+import { linkedinPublishPost } from "./LinkedIn";
 
 export * from "./Facebook";
 export * from "./Twitter";
@@ -60,6 +61,10 @@ const postPublisher = async (
 
   if (postData?.postTo?.slack) {
     await slackPublishPost(postID);
+  }
+
+  if (postData?.postTo?.linkedin) {
+    await linkedinPublishPost(postID);
   }
 
   const postRef = admin.firestore().doc(`posts/${postID}`);

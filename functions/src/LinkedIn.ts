@@ -3,10 +3,17 @@ import * as admin from "firebase-admin";
 
 import axios from "axios";
 
+const URN_PREFIX = {
+  person: "urn:li:person:",
+  org: "urn:li:organization:",
+};
+
 const CLIENT_ID = functions.config().linkedin.clientid;
 const CLIENT_SECRET = functions.config().linkedin.clientsecret;
 
-const REDIRECT_URI = "https://localhost:3000/auth/linkedin";
+const REDIRECT_URI = "https://comet.jimmyd.dev:3000/auth/linkedin";
+
+const axiosClient = axios.create({ baseURL: "https://api.linkedin.com/v2/" });
 
 /**
  * Complete OAuth flow with provided user code.
@@ -22,12 +29,12 @@ export const linkedinUserLogin = functions.https.onCall(
       );
     }
 
-    const params = new URLSearchParams()
-    params.append("grant_type", "authorization_code")
-    params.append("code", oauth_code)
-    params.append("redirect_uri", REDIRECT_URI)
-    params.append("client_id", CLIENT_ID)
-    params.append("client_secret", CLIENT_SECRET)
+    const params = new URLSearchParams();
+    params.append("grant_type", "authorization_code");
+    params.append("code", oauth_code);
+    params.append("redirect_uri", REDIRECT_URI);
+    params.append("client_id", CLIENT_ID);
+    params.append("client_secret", CLIENT_SECRET);
 
     const result = await axios.post(
       "https://www.linkedin.com/oauth/v2/accessToken",
@@ -58,6 +65,34 @@ export const linkedinUserLogin = functions.https.onCall(
   }
 );
 
+export const linkedinGetOrganisations = functions.https.onCall(() => {
+  // APIs to call:
+  // Get list of managed organisations: https://api.linkedin.com/v2/organizationAcls?q=roleAssignee
+  // Get the details of each organisation: https://api.linkedin.com/v2/organizations/{companyid}
+
+  throw new functions.https.HttpsError("unimplemented", "Unimplemented");
+});
+
+export const linkedinSetOrganisation = functions.https.onCall(
+  async (data, context) => {
+    const orgid = data.organisation;
+
+    if (!orgid) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "Organisation ID not provided."
+      );
+    }
+
+    await admin
+      .firestore()
+      .doc(`tokens/${context.auth?.uid}`)
+      .update({ "linkedin.organisation": orgid });
+
+    return "Success";
+  }
+);
+
 export const linkedinUserLogout = functions.https.onCall(() => {
   throw new functions.https.HttpsError("unimplemented", "Unimplemented");
 });
@@ -73,14 +108,12 @@ export const linkedinVerifyToken = functions.https.onCall(
       return { setup: false, reason: "LinkedIn is not linked." };
     }
 
-    const client = axios.create({ baseURL: "https://api.linkedin.com/v2/" });
-
-    const result = await client.get("me", {
+    const result = await axiosClient.get("me", {
       headers: { Authorization: `Bearer ${userData.data()?.linkedin.token}` },
     });
 
-    // Hi if you're reading this, it means that I want to burn the entire LinkedIn API because 
-    // its reference guide is useless. Why is there the same endpoint documented in 3 different 
+    // Hi if you're reading this, it means that I want to burn the entire LinkedIn API because
+    // its reference guide is useless. Why is there the same endpoint documented in 3 different
     // places with varying levels of up to dateness? Idk ask the shitty ass LinkedIn API
     if (result.status === 200) {
       return {
@@ -99,5 +132,44 @@ export const linkedinVerifyToken = functions.https.onCall(
 );
 
 export const linkedinPublishPost = async (postID: string) => {
-  throw new functions.https.HttpsError("unimplemented", "Unimplemented");
+  const postRef = admin.firestore().doc(`posts/${postID}`);
+  const postData = await postRef.get();
+
+  const userData = await admin
+    .firestore()
+    .doc(`tokens/${postData.data()?.ownerID}`)
+    .get();
+
+  if (
+    !userData.exists ||
+    !userData.data()?.linkedin?.token ||
+    !userData.data()?.linkedin.organisation
+  ) {
+    return;
+  }
+
+  const shareText = {
+    text: postData.data()?.content,
+  };
+
+  const result = await axiosClient.post(
+    "shares",
+    {
+      owner: `${URN_PREFIX.org}${userData.data()?.linkedin.organisation}`,
+      text: shareText,
+      distribution: {
+        linkedInDistributionTarget: {},
+      },
+
+      // subject: SUBJECTHERE
+      // content: content like links with thumbnails and images here
+    },
+    { headers: { Authorization: `Bearer ${userData.data()?.linkedin.token}` } }
+  );
+
+  const permalink = `https://www.linkedin.com/feed/update/${result.data.activity}`;
+
+  await postRef.update({
+    "permalink.linkedin": permalink,
+  });
 };
