@@ -9,7 +9,7 @@ const PostsPage = () => {
 
   return (
     <Switch>
-      <Route path={`${path}/:postID`}>
+      <Route path={`${path}/:postIDParam`}>
         <EditPost />
       </Route>
       <Route path={`${path}`}>

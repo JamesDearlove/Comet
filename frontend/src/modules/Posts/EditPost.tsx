@@ -31,7 +31,7 @@ import {
 import ExtraActions from "./ExtraActions";
 
 interface IPostParams {
-  postID: string;
+  postIDParam: string;
 }
 
 const fieldValue = firebase.firestore.FieldValue;
@@ -50,10 +50,11 @@ const useStyles = makeStyles((theme: Theme) =>
 const EditPost = () => {
   const classes = useStyles();
   const history = useHistory();
-  const { postID } = useParams<IPostParams>();
+  const { postIDParam } = useParams<IPostParams>();
   const { enqueueSnackbar } = useSnackbar();
 
   const [post, setPost] = useState<firebase.firestore.DocumentData>();
+  const [postID, setPostID] = useState("");
   const [postLoadError, setPostLoadError] = useState(false);
   // For new post state
   const [newPost, setNewPost] = useState(false);
@@ -66,12 +67,15 @@ const EditPost = () => {
 
   useEffect(() => {
     const loadPost = async () => {
-      const newPost = postID === "new";
+      const newPost = postIDParam === "new";
       const userID = firebase.auth().currentUser?.uid;
 
       const collectionRef = firebase.firestore().collection("posts");
-      const postRef = newPost ? collectionRef.doc() : collectionRef.doc(postID);
+      const postRef = newPost
+        ? collectionRef.doc()
+        : collectionRef.doc(postIDParam);
 
+      setPostID(postRef.id);
       setPostRef(postRef);
 
       if (newPost) {
@@ -92,7 +96,7 @@ const EditPost = () => {
     };
 
     loadPost();
-  }, [postID]);
+  }, [postIDParam]);
 
   const createPost = () => {
     var facebookPost = firebase.functions().httpsCallable("publishPost");
@@ -141,6 +145,9 @@ const EditPost = () => {
   const postNowClick = async () => {
     setDisabled(true);
     await savePost();
+    if (newPost) {
+      setNewPost(false);
+    }
     createPost();
   };
 
