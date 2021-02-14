@@ -16,7 +16,7 @@ import {
 } from "@material-ui/core/styles";
 import Avatar from "@material-ui/core/Avatar";
 import blue from "@material-ui/core/colors/blue";
-import red from "@material-ui/core/colors/red";
+import blueGrey from "@material-ui/core/colors/blueGrey";
 import Box from "@material-ui/core/Box";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import Container from "@material-ui/core/Container";
@@ -36,7 +36,7 @@ const drawerWidth = 240;
 const theme = createMuiTheme({
   palette: {
     primary: blue,
-    secondary: red,
+    secondary: blueGrey,
   },
 });
 
