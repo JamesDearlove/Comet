@@ -59,7 +59,7 @@ export const linkedinUserLogin = functions.https.onCall(
       .firestore()
       .doc(`tokens/${context.auth?.uid}`)
       .update({
-        linkedin: { token: result.data.access_token },
+        "linkedin.token": result.data.access_token,
       });
     return "Success";
   }
@@ -75,7 +75,7 @@ export const linkedinGetOrganisations = functions.https.onCall(() => {
 
 export const linkedinSetOrganisation = functions.https.onCall(
   async (data, context) => {
-    const orgid = data.organisation;
+    const orgid = data.org;
 
     if (!orgid) {
       throw new functions.https.HttpsError(
@@ -87,7 +87,7 @@ export const linkedinSetOrganisation = functions.https.onCall(
     await admin
       .firestore()
       .doc(`tokens/${context.auth?.uid}`)
-      .update({ "linkedin.organisation": orgid });
+      .update({ "linkedin.org": orgid });
 
     return "Success";
   }
@@ -140,12 +140,16 @@ export const linkedinPublishPost = async (postID: string) => {
     .doc(`tokens/${postData.data()?.ownerID}`)
     .get();
 
+  // TODO: Kenton's great idea of using assertions
   if (
     !userData.exists ||
     !userData.data()?.linkedin?.token ||
-    !userData.data()?.linkedin.organisation
+    !userData.data()?.linkedin.org
   ) {
-    return;
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "User has not connected to LinkedIn."
+    );
   }
 
   const shareText = {
@@ -155,7 +159,7 @@ export const linkedinPublishPost = async (postID: string) => {
   const result = await axiosClient.post(
     "shares",
     {
-      owner: `${URN_PREFIX.org}${userData.data()?.linkedin.organisation}`,
+      owner: `${URN_PREFIX.org}${userData.data()?.linkedin.org}`,
       text: shareText,
       distribution: {
         linkedInDistributionTarget: {},
