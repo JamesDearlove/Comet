@@ -30,6 +30,8 @@ import {
 } from "@material-ui/pickers";
 import ExtraActions from "./ExtraActions";
 
+import twitter from "twitter-text";
+
 interface IPostParams {
   postIDParam: string;
 }
@@ -195,7 +197,9 @@ const EditPost = () => {
                 rows={12}
                 value={post.content}
                 onChange={(e) => setPost({ ...post, content: e.target.value })}
-                helperText={`${post.content.length}/280 (Twitter Character Limit)`}
+                helperText={`${twitter.getTweetLength(
+                  post.content
+                )}/280 (Twitter Character Limit)`}
                 disabled={disabled}
               />
             </Grid>

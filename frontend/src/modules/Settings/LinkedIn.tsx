@@ -34,8 +34,6 @@ const LinkedInSettings = () => {
     window.location.href = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${redirectURI}&scope=${scope}`;
   };
 
-  console.log(userData?.firstname, userData?.lastname);
-
   return (
     <>
       <Typography variant="h5">LinkedIn Connector</Typography>
