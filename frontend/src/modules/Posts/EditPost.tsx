@@ -237,8 +237,13 @@ const EditPost = () => {
                 onChange={(e) => setPost({ ...post, content: e.target.value })}
                 disabled={disabled}
                 helperText={
-                  !(addTwitterContent || post.twitter?.content) &&
-                  post.postTo?.twitter && (
+                  <Collapse
+                    in={
+                      !addTwitterContent &&
+                      !post.twitter?.content &&
+                      post.postTo?.twitter
+                    }
+                  >
                     <>
                       <TwitterCharCount tweet={post.content} />
                       {" - "}
@@ -246,52 +251,51 @@ const EditPost = () => {
                         Create seperate Twitter content.
                       </Link>
                     </>
-                  )
+                  </Collapse>
                 }
               />
-              {post.postTo?.twitter && (
-                <>
-                  {(addTwitterContent ||
-                    (post.twitter?.content !== undefined &&
-                      post.twitter?.content !== "")) && (
-                    <TextField
-                      margin="normal"
-                      variant="outlined"
-                      fullWidth
-                      id="content"
-                      label="Twitter Post Content"
-                      multiline
-                      rows={6}
-                      value={post.twitter?.content}
-                      onChange={(e) =>
-                        setPost({
-                          ...post,
-                          twitter: { ...post.twitter, content: e.target.value },
-                        })
-                      }
-                      helperText={
-                        <>
-                          <TwitterCharCount tweet={post.twitter?.content} />
-                          {" - "}
-                          <Link
-                            href="#"
-                            onClick={() => {
-                              setAddTwitterContent(false);
-                              setPost({
-                                ...post,
-                                twitter: { ...post.twitter, content: "" },
-                              });
-                            }}
-                          >
-                            Remove seperate Twitter content.
-                          </Link>
-                        </>
-                      }
-                      disabled={disabled}
-                    />
-                  )}
-                </>
-              )}
+              <Collapse
+                in={
+                  post.postTo?.twitter &&
+                  (addTwitterContent || post.twitter?.content)
+                }
+              >
+                <TextField
+                  margin="normal"
+                  variant="outlined"
+                  fullWidth
+                  id="content"
+                  label="Twitter Post Content"
+                  multiline
+                  rows={6}
+                  value={post.twitter?.content}
+                  onChange={(e) =>
+                    setPost({
+                      ...post,
+                      twitter: { ...post.twitter, content: e.target.value },
+                    })
+                  }
+                  helperText={
+                    <>
+                      <TwitterCharCount tweet={post.twitter?.content} />
+                      {" - "}
+                      <Link
+                        href="#"
+                        onClick={() => {
+                          setAddTwitterContent(false);
+                          setPost({
+                            ...post,
+                            twitter: { ...post.twitter, content: "" },
+                          });
+                        }}
+                      >
+                        Remove seperate Twitter content.
+                      </Link>
+                    </>
+                  }
+                  disabled={disabled}
+                />
+              </Collapse>
             </Grid>
             <Grid item xs={12} md={4}>
               <div>
