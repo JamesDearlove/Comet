@@ -176,7 +176,7 @@ export const twitterPublishPost = async (postID: string) => {
   if (postData.exists) {
     const client = await getClient(true, postData.data()?.ownerID);
 
-    let content = postData.data()?.twitter.content
+    const content = postData.data()?.twitter.content
     ? postData.data()?.twitter.content
     : postData.data()?.content;
 
