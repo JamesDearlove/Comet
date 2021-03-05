@@ -176,11 +176,15 @@ export const twitterPublishPost = async (postID: string) => {
   if (postData.exists) {
     const client = await getClient(true, postData.data()?.ownerID);
 
+    let content = postData.data()?.twitter.content
+    ? postData.data()?.twitter.content
+    : postData.data()?.content;
+
     let tweet;
 
     try {
       tweet = await client.post("statuses/update", {
-        status: postData.data()?.content,
+        status: content,
       });
     } catch {
       throw new functions.https.HttpsError(

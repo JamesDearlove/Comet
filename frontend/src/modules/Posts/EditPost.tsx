@@ -10,9 +10,11 @@ import FormControl from "@material-ui/core/FormControl";
 import FormGroup from "@material-ui/core/FormGroup";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import Grid from "@material-ui/core/Grid";
+import Link from "@material-ui/core/Link";
 import LinearProgress from "@material-ui/core/LinearProgress";
 import TextField from "@material-ui/core/TextField";
 import Typography from "@material-ui/core/Typography";
+import red from "@material-ui/core/colors/red";
 
 import { useSnackbar } from "notistack";
 
@@ -46,8 +48,28 @@ const useStyles = makeStyles((theme: Theme) =>
     button: {
       margin: theme.spacing(1),
     },
+    redText: {
+      color: red[400],
+    },
   })
 );
+
+interface twitterCharCountProps {
+  tweet: string;
+}
+
+const TwitterCharCount = ({ tweet }: twitterCharCountProps) => {
+  const classes = useStyles();
+
+  const tweetLength = twitter.getTweetLength(tweet);
+  const tweetStyle = tweetLength > 280 ? classes.redText : "";
+
+  return (
+    <Typography variant="caption" className={tweetStyle}>
+      Twitter character limit: {tweetLength}/280
+    </Typography>
+  );
+};
 
 const EditPost = () => {
   const classes = useStyles();
@@ -66,6 +88,7 @@ const EditPost = () => {
   >();
 
   const [disabled, setDisabled] = useState(false);
+  const [addTwitterContent, setAddTwitterContent] = useState(false);
 
   useEffect(() => {
     const loadPost = async () => {
@@ -153,6 +176,21 @@ const EditPost = () => {
     createPost();
   };
 
+  const twitterCheck = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPost({
+      ...post,
+      postTo: {
+        ...post?.postTo,
+        twitter: e.target.checked,
+      },
+      twitter: {
+        content: "",
+      },
+    });
+    if (!e.target.checked) {
+    }
+  };
+
   const scheduledForChecked = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
       setPost({ ...post, scheduledFor: new Date() });
@@ -194,14 +232,66 @@ const EditPost = () => {
                 id="content"
                 label="Post Content"
                 multiline
-                rows={12}
+                rows={10}
                 value={post.content}
                 onChange={(e) => setPost({ ...post, content: e.target.value })}
-                helperText={`${twitter.getTweetLength(
-                  post.content
-                )}/280 (Twitter Character Limit)`}
                 disabled={disabled}
+                helperText={
+                  !(addTwitterContent || post.twitter?.content) &&
+                  post.postTo?.twitter && (
+                    <>
+                      <TwitterCharCount tweet={post.content} />
+                      {" - "}
+                      <Link href="#" onClick={() => setAddTwitterContent(true)}>
+                        Create seperate Twitter content.
+                      </Link>
+                    </>
+                  )
+                }
               />
+              {post.postTo?.twitter && (
+                <>
+                  {(addTwitterContent ||
+                    (post.twitter?.content !== undefined &&
+                      post.twitter?.content !== "")) && (
+                    <TextField
+                      margin="normal"
+                      variant="outlined"
+                      fullWidth
+                      id="content"
+                      label="Twitter Post Content"
+                      multiline
+                      rows={6}
+                      value={post.twitter?.content}
+                      onChange={(e) =>
+                        setPost({
+                          ...post,
+                          twitter: { ...post.twitter, content: e.target.value },
+                        })
+                      }
+                      helperText={
+                        <>
+                          <TwitterCharCount tweet={post.twitter?.content} />
+                          {" - "}
+                          <Link
+                            href="#"
+                            onClick={() => {
+                              setAddTwitterContent(false);
+                              setPost({
+                                ...post,
+                                twitter: { ...post.twitter, content: "" },
+                              });
+                            }}
+                          >
+                            Remove seperate Twitter content.
+                          </Link>
+                        </>
+                      }
+                      disabled={disabled}
+                    />
+                  )}
+                </>
+              )}
             </Grid>
             <Grid item xs={12} md={4}>
               <div>
@@ -231,15 +321,7 @@ const EditPost = () => {
                         <Checkbox
                           name="twitter"
                           checked={post.postTo?.twitter}
-                          onChange={(e) =>
-                            setPost({
-                              ...post,
-                              postTo: {
-                                ...post.postTo,
-                                twitter: e.target.checked,
-                              },
-                            })
-                          }
+                          onChange={twitterCheck}
                         />
                       }
                       label="Twitter"
