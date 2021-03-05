@@ -453,6 +453,7 @@ const EditPost = () => {
                   <Button
                     variant="contained"
                     color="secondary"
+                    disabled={!post.scheduledFor}
                     className={classes.button}
                     endIcon={<ScheduleIcon />}
                     onClick={saveScheduleClick}
