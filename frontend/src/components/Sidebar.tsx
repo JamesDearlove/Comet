@@ -27,6 +27,10 @@ import firebase from "firebase/app";
 import Pages from "./Pages";
 import { Avatar } from "@material-ui/core";
 
+import blue from "@material-ui/core/colors/lightBlue";
+
+const VERSION_STRING = 'Comet - v0.2 "Blue"';
+
 const drawerWidth = 240;
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -58,6 +62,15 @@ const useStyles = makeStyles((theme: Theme) =>
       width: drawerWidth,
     },
     toolbar: theme.mixins.toolbar,
+    drawerBottom: {
+      position: "fixed",
+      bottom: 0,
+      textAlign: "center",
+      paddingBottom: 10,
+    },
+    versionString: {
+      color: blue[600],
+    },
   })
 );
 
@@ -120,18 +133,29 @@ export default function ResponsiveDrawer() {
   };
 
   const drawer = (
-    <div>
-      <div className={classes.toolbar} />
-      <Divider />
-      <List>
-        {Pages.map((item, index) => (
-          <ListItem key={index} button component={Link} to={item.path}>
-            <ListItemIcon>{item.icon}</ListItemIcon>
-            <ListItemText primary={item.name} />
+    <>
+      <div>
+        <div className={classes.toolbar} />
+        <Divider />
+        <List>
+          {Pages.map((item, index) => (
+            <ListItem key={index} button component={Link} to={item.path}>
+              <ListItemIcon>{item.icon}</ListItemIcon>
+              <ListItemText primary={item.name} />
+            </ListItem>
+          ))}
+        </List>
+      </div>
+      <div className={classes.drawerBottom}>
+        <List>
+          <ListItem dense key="about">
+            <ListItemText className={classes.versionString}>
+              {VERSION_STRING}
+            </ListItemText>
           </ListItem>
-        ))}
-      </List>
-    </div>
+        </List>
+      </div>
+    </>
   );
 
   return (

@@ -248,7 +248,7 @@ const EditPost = () => {
                       <TwitterCharCount tweet={post.content} />
                       {" - "}
                       <Link href="#" onClick={() => setAddTwitterContent(true)}>
-                        Create seperate Twitter content.
+                        Create separate Twitter content.
                       </Link>
                     </>
                   </Collapse>
@@ -289,7 +289,7 @@ const EditPost = () => {
                           });
                         }}
                       >
-                        Remove seperate Twitter content.
+                        Remove separate Twitter content.
                       </Link>
                     </>
                   }

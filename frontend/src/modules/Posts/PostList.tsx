@@ -15,6 +15,8 @@ import firebase from "firebase/app";
 import AddIcon from "@material-ui/icons/Add";
 import ExtraActions from "./ExtraActions";
 
+import { format } from "date-fns";
+
 interface IPostItem {
   id: string;
   data: any;
@@ -42,15 +44,19 @@ const PostItem = ({ id, data, dataRef }: IPostItem) => {
     setDeleted(true);
   };
 
+  const formatDate = (date: Date) => {
+    return format(date, "PPPppp");
+  };
+
   if (deleted) {
     return <></>;
   }
 
   let status = "Draft";
   if (data.postedOn) {
-    status = `Posted on ${data.postedOn.toDate()}`;
+    status = `Posted on ${formatDate(data.postedOn.toDate())}`;
   } else if (data.scheduledFor) {
-    status = `Scheduled for ${data.scheduledFor.toDate()}`;
+    status = `Scheduled for ${formatDate(data.scheduledFor.toDate())}`;
   }
 
   return (
