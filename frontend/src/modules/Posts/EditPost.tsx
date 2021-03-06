@@ -9,7 +9,6 @@ import Link from "@material-ui/core/Link";
 import LinearProgress from "@material-ui/core/LinearProgress";
 import TextField from "@material-ui/core/TextField";
 import Typography from "@material-ui/core/Typography";
-import red from "@material-ui/core/colors/red";
 
 import { useSnackbar } from "notistack";
 
@@ -21,10 +20,9 @@ import ScheduleIcon from "@material-ui/icons/Schedule";
 import SendIcon from "@material-ui/icons/Send";
 
 import ExtraActions from "./ExtraActions";
-
-import twitter from "twitter-text";
 import PostLocations from "./PostLocations";
 import PostingMethod from "./PostingMethod";
+import TwitterCharCount from "./TwitterCharCount";
 
 interface IPostParams {
   postIDParam: string;
@@ -40,28 +38,8 @@ const useStyles = makeStyles((theme: Theme) =>
     button: {
       margin: theme.spacing(1),
     },
-    redText: {
-      color: red[400],
-    },
   })
 );
-
-interface TwitterCharCountProps {
-  tweet: string;
-}
-
-const TwitterCharCount = ({ tweet }: TwitterCharCountProps) => {
-  const classes = useStyles();
-
-  const tweetLength = twitter.getTweetLength(tweet);
-  const tweetStyle = tweetLength > 280 ? classes.redText : "";
-
-  return (
-    <Typography variant="caption" className={tweetStyle}>
-      Twitter character limit: {tweetLength}/280
-    </Typography>
-  );
-};
 
 const EditPost = () => {
   const classes = useStyles();
