@@ -28,6 +28,7 @@ import Pages from "./Pages";
 import { Avatar } from "@material-ui/core";
 
 import cyan from "@material-ui/core/colors/cyan";
+import red from "@material-ui/core/colors/red";
 
 const VERSION_STRING = 'Comet - v0.3 "Cyan"';
 
@@ -63,13 +64,15 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     toolbar: theme.mixins.toolbar,
     drawerBottom: {
+      width: drawerWidth,
       position: "fixed",
       bottom: 0,
-      textAlign: "center",
-      paddingBottom: 10,
     },
     versionString: {
       color: cyan[600],
+    },
+    alertString: {
+      color: red[500],
     },
   })
 );
@@ -147,12 +150,20 @@ export default function ResponsiveDrawer() {
         </List>
       </div>
       <div className={classes.drawerBottom}>
+        <Divider />
         <List>
           <ListItem dense key="about">
             <ListItemText className={classes.versionString}>
               {VERSION_STRING}
             </ListItemText>
           </ListItem>
+          {process.env.NODE_ENV === "development" && (
+            <ListItem dense key="dev">
+              <ListItemText className={classes.alertString}>
+                Dev Mode
+              </ListItemText>
+            </ListItem>
+          )}
         </List>
       </div>
     </>
