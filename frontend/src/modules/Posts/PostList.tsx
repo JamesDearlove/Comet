@@ -55,7 +55,7 @@ const PostItem = ({ id, data, dataRef }: IPostItem) => {
   let status = "Draft";
   if (data.postedOn) {
     status = `Posted on ${formatDate(data.postedOn.toDate())}`;
-  } else if (data.scheduledFor) {
+  } else if (data.scheduled && data.scheduledFor) {
     status = `Scheduled for ${formatDate(data.scheduledFor.toDate())}`;
   }
 
