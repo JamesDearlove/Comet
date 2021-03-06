@@ -246,10 +246,17 @@ const EditPost = () => {
                   >
                     <>
                       <TwitterCharCount tweet={post.content} />
-                      {" - "}
-                      <Link href="#" onClick={() => setAddTwitterContent(true)}>
-                        Create separate Twitter content.
-                      </Link>
+                      {!disabled && (
+                        <>
+                          {" - "}
+                          <Link
+                            href="#"
+                            onClick={() => setAddTwitterContent(true)}
+                          >
+                            Create separate Twitter content.
+                          </Link>
+                        </>
+                      )}
                     </>
                   </Collapse>
                 }
@@ -278,19 +285,23 @@ const EditPost = () => {
                   helperText={
                     <>
                       <TwitterCharCount tweet={post.twitter?.content} />
-                      {" - "}
-                      <Link
-                        href="#"
-                        onClick={() => {
-                          setAddTwitterContent(false);
-                          setPost({
-                            ...post,
-                            twitter: { ...post.twitter, content: "" },
-                          });
-                        }}
-                      >
-                        Remove separate Twitter content.
-                      </Link>
+                      {!disabled && (
+                        <>
+                          {" - "}
+                          <Link
+                            href="#"
+                            onClick={() => {
+                              setAddTwitterContent(false);
+                              setPost({
+                                ...post,
+                                twitter: { ...post.twitter, content: "" },
+                              });
+                            }}
+                          >
+                            Remove separate Twitter content.
+                          </Link>
+                        </>
+                      )}
                     </>
                   }
                   disabled={disabled}
