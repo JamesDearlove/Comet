@@ -34,42 +34,44 @@ const PostingMethod = ({ disabled, post, setPost }: PostingMethodProps) => {
   };
 
   return (
-    <FormControl margin="dense" component="fieldset" disabled={disabled}>
-      <FormLabel component="legend">Posting Method</FormLabel>
-      <FormGroup>
-        <FormControlLabel
-          control={
-            <Checkbox
-              name="scheduledFor"
-              checked={post.scheduledFor !== undefined}
-              onChange={scheduledForOnChecked}
-            />
-          }
-          label="Schedule Post"
-        />
-      </FormGroup>
-      <Collapse in={post.scheduledFor !== undefined}>
-        <MuiPickersUtilsProvider utils={DateFnsUtils}>
-          <KeyboardDateTimePicker
-            margin="dense"
-            id="date-picker-dialog"
-            label="Date"
-            format="dd/MM/yyyy hh:mm a"
-            value={post.scheduledFor}
-            disabled={disabled}
-            onChange={(date) =>
-              setPost({
-                ...post,
-                scheduledFor: date,
-              })
+    <div>
+      <FormControl margin="dense" component="fieldset" disabled={disabled}>
+        <FormLabel component="legend">Posting Method</FormLabel>
+        <FormGroup>
+          <FormControlLabel
+            control={
+              <Checkbox
+                name="scheduledFor"
+                checked={post.scheduledFor !== undefined}
+                onChange={scheduledForOnChecked}
+              />
             }
-            KeyboardButtonProps={{
-              "aria-label": "change date",
-            }}
+            label="Schedule Post"
           />
-        </MuiPickersUtilsProvider>
-      </Collapse>
-    </FormControl>
+        </FormGroup>
+        <Collapse in={post.scheduledFor !== undefined}>
+          <MuiPickersUtilsProvider utils={DateFnsUtils}>
+            <KeyboardDateTimePicker
+              margin="dense"
+              id="date-picker-dialog"
+              label="Date"
+              format="dd/MM/yyyy hh:mm a"
+              value={post.scheduledFor}
+              disabled={disabled}
+              onChange={(date) =>
+                setPost({
+                  ...post,
+                  scheduledFor: date,
+                })
+              }
+              KeyboardButtonProps={{
+                "aria-label": "change date",
+              }}
+            />
+          </MuiPickersUtilsProvider>
+        </Collapse>
+      </FormControl>
+    </div>
   );
 };
 

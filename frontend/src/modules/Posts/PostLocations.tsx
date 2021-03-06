@@ -74,7 +74,7 @@ const PostLocations = ({ disabled, post, setPost }: PostLocationsProps) => {
   ];
 
   return (
-    <>
+    <div>
       <FormControl component="fieldset" disabled={disabled}>
         <FormLabel component="legend">Post Locations</FormLabel>
         <FormGroup>
@@ -92,7 +92,7 @@ const PostLocations = ({ disabled, post, setPost }: PostLocationsProps) => {
           ))}
         </FormGroup>
       </FormControl>
-    </>
+    </div>
   );
 };
 
