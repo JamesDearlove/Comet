@@ -23,6 +23,7 @@ import ExtraActions from "./ExtraActions";
 import PostLocations from "./PostLocations";
 import PostingMethod from "./PostingMethod";
 import TwitterCharCount from "./TwitterCharCount";
+import PostAttachments from "./PostAttachments";
 
 interface IPostParams {
   postIDParam: string;
@@ -254,6 +255,11 @@ const EditPost = () => {
                   disabled={disabled}
                 />
               </Collapse>
+              <PostAttachments
+                disabled={disabled}
+                post={post}
+                setPost={setPost}
+              />
             </Grid>
             <Grid item xs={12} md={4}>
               <PostLocations

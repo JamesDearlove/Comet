@@ -17,7 +17,7 @@ import red from "@material-ui/core/colors/red";
 import { makeStyles, Theme, createStyles } from "@material-ui/core/styles";
 
 import { useSnackbar } from "notistack";
-import firebase from "firebase";
+import firebase from "firebase/app";
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({

@@ -27,9 +27,9 @@ import firebase from "firebase/app";
 import Pages from "./Pages";
 import { Avatar } from "@material-ui/core";
 
-import blue from "@material-ui/core/colors/lightBlue";
+import cyan from "@material-ui/core/colors/cyan";
 
-const VERSION_STRING = 'Comet - v0.2 "Blue"';
+const VERSION_STRING = 'Comet - v0.3 "Cyan"';
 
 const drawerWidth = 240;
 
@@ -69,7 +69,7 @@ const useStyles = makeStyles((theme: Theme) =>
       paddingBottom: 10,
     },
     versionString: {
-      color: blue[600],
+      color: cyan[600],
     },
   })
 );
