@@ -33,6 +33,7 @@ import {
 import ExtraActions from "./ExtraActions";
 
 import twitter from "twitter-text";
+import PostLocations from "./PostLocations";
 
 interface IPostParams {
   postIDParam: string;
@@ -54,11 +55,11 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 );
 
-interface twitterCharCountProps {
+interface TwitterCharCountProps {
   tweet: string;
 }
 
-const TwitterCharCount = ({ tweet }: twitterCharCountProps) => {
+const TwitterCharCount = ({ tweet }: TwitterCharCountProps) => {
   const classes = useStyles();
 
   const tweetLength = twitter.getTweetLength(tweet);
@@ -174,21 +175,6 @@ const EditPost = () => {
       setNewPost(false);
     }
     createPost();
-  };
-
-  const twitterCheck = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPost({
-      ...post,
-      postTo: {
-        ...post?.postTo,
-        twitter: e.target.checked,
-      },
-      twitter: {
-        content: "",
-      },
-    });
-    if (!e.target.checked) {
-    }
   };
 
   const scheduledForChecked = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -309,77 +295,11 @@ const EditPost = () => {
               </Collapse>
             </Grid>
             <Grid item xs={12} md={4}>
-              <div>
-                <FormControl component="fieldset" disabled={disabled}>
-                  <FormLabel component="legend">Post Locations</FormLabel>
-                  <FormGroup>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          name="facebook"
-                          checked={post.postTo?.facebook}
-                          onChange={(e) =>
-                            setPost({
-                              ...post,
-                              postTo: {
-                                ...post.postTo,
-                                facebook: e.target.checked,
-                              },
-                            })
-                          }
-                        />
-                      }
-                      label="Facebook"
-                    />
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          name="twitter"
-                          checked={post.postTo?.twitter}
-                          onChange={twitterCheck}
-                        />
-                      }
-                      label="Twitter"
-                    />
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          name="linkedin"
-                          checked={post.postTo?.linkedin}
-                          onChange={(e) =>
-                            setPost({
-                              ...post,
-                              postTo: {
-                                ...post.postTo,
-                                linkedin: e.target.checked,
-                              },
-                            })
-                          }
-                        />
-                      }
-                      label="Linkedin"
-                    />
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          name="slack"
-                          checked={post.postTo?.slack}
-                          onChange={(e) =>
-                            setPost({
-                              ...post,
-                              postTo: {
-                                ...post.postTo,
-                                slack: e.target.checked,
-                              },
-                            })
-                          }
-                        />
-                      }
-                      label="Slack"
-                    />
-                  </FormGroup>
-                </FormControl>
-              </div>
+              <PostLocations
+                disabled={disabled}
+                post={post}
+                setPost={setPost}
+              />
               <div>
                 <FormControl
                   margin="dense"

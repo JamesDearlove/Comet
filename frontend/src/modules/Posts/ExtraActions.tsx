@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useLocation, useHistory, Link } from "react-router-dom";
+import { useLocation, useHistory } from "react-router-dom";
 
 import Button from "@material-ui/core/Button";
 import Dialog from "@material-ui/core/Dialog";
