@@ -39,6 +39,12 @@ const useStyles = makeStyles((theme: Theme) =>
     button: {
       margin: theme.spacing(1),
     },
+    customHelperParent: {
+      marginBottom: theme.spacing(1),
+    },
+    customHelperTextField: {
+      marginBottom: 0,
+    },
   })
 );
 
@@ -60,6 +66,10 @@ const EditPost = () => {
 
   const [disabled, setDisabled] = useState(false);
   const [addTwitterContent, setAddTwitterContent] = useState(false);
+
+  const showTwitterContent: boolean =
+    post?.postTo?.twitter &&
+    (addTwitterContent || post?.twitter?.content !== "");
 
   useEffect(() => {
     const loadPost = async () => {
@@ -108,7 +118,6 @@ const EditPost = () => {
   };
 
   const saveScheduleClick = () => {
-    // setPost({ ...post, scheduled: true });
     savePost({ scheduled: true });
     history.push("/posts");
   };
@@ -173,48 +182,46 @@ const EditPost = () => {
                 onChange={(e) => setPost({ ...post, title: e.target.value })}
                 disabled={disabled}
               />
-              <TextField
-                margin="normal"
-                variant="outlined"
-                fullWidth
-                id="content"
-                label="Post Content"
-                multiline
-                rows={10}
-                value={post.content}
-                onChange={(e) => setPost({ ...post, content: e.target.value })}
-                disabled={disabled}
-                helperText={
-                  <Collapse
-                    in={
-                      !addTwitterContent &&
-                      !post.twitter?.content &&
-                      post.postTo?.twitter
-                    }
-                  >
-                    <>
-                      <TwitterCharCount tweet={post.content} />
-                      {!disabled && (
-                        <>
-                          {" - "}
-                          <Link
-                            href="#"
-                            onClick={() => setAddTwitterContent(true)}
-                          >
-                            Create separate Twitter content.
-                          </Link>
-                        </>
-                      )}
-                    </>
-                  </Collapse>
-                }
-              />
-              <Collapse
-                in={
-                  post.postTo?.twitter &&
-                  (addTwitterContent || post.twitter?.content)
-                }
-              >
+              <div className={classes.customHelperParent}>
+                <TextField
+                  margin="normal"
+                  variant="outlined"
+                  fullWidth
+                  id="content"
+                  label="Post Content"
+                  multiline
+                  rows={10}
+                  value={post.content}
+                  onChange={(e) =>
+                    setPost({ ...post, content: e.target.value })
+                  }
+                  disabled={disabled}
+                  className={classes.customHelperTextField}
+                />
+                <Collapse
+                  in={
+                    !addTwitterContent &&
+                    !post.twitter?.content &&
+                    post.postTo?.twitter
+                  }
+                >
+                  <div className="MuiFormHelperText-root MuiFormHelperText-contained">
+                    <TwitterCharCount tweet={post.content} />
+                    {!disabled && (
+                      <>
+                        {" - "}
+                        <Link
+                          href="#"
+                          onClick={() => setAddTwitterContent(true)}
+                        >
+                          Create separate Twitter content.
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                </Collapse>
+              </div>
+              <Collapse in={showTwitterContent}>
                 <TextField
                   margin="normal"
                   variant="outlined"

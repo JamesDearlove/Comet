@@ -11,7 +11,6 @@ import InfoIcon from "@material-ui/icons/Info";
 
 const LinkedInSettings = () => {
   const [loading, setLoading] = useState(true);
-  const [loadingRequestToken, setLoadingRequestToken] = useState(false);
 
   const [userData, setUserData] = useState<any>({});
 
@@ -50,15 +49,9 @@ const LinkedInSettings = () => {
               {userData?.lastname.toString()}
             </Typography>
           )}
-          <Button
-            variant="outlined"
-            color="primary"
-            onClick={startLogin}
-            disabled={loadingRequestToken}
-          >
+          <Button variant="outlined" color="primary" onClick={startLogin}>
             Configure LinkedIn
           </Button>
-          {loadingRequestToken && <CircularProgress />}
         </>
       )}
     </>

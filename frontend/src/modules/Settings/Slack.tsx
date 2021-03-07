@@ -11,7 +11,6 @@ import InfoIcon from "@material-ui/icons/Info";
 
 const SlackSettings = () => {
   const [loading, setLoading] = useState(true);
-  const [loadingRequestToken, setLoadingRequestToken] = useState(false);
 
   const [userData, setUserData] = useState<any>({});
 
@@ -47,15 +46,9 @@ const SlackSettings = () => {
               Logged in as {userData?.user} to {userData?.team}
             </Typography>
           )}
-          <Button
-            variant="outlined"
-            color="primary"
-            onClick={startLogin}
-            disabled={loadingRequestToken}
-          >
+          <Button variant="outlined" color="primary" onClick={startLogin}>
             Configure Slack
           </Button>
-          {loadingRequestToken && <CircularProgress />}
         </>
       )}
     </>

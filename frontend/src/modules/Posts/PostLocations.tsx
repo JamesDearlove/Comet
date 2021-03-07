@@ -80,6 +80,7 @@ const PostLocations = ({ disabled, post, setPost }: PostLocationsProps) => {
         <FormGroup>
           {locations.map((location) => (
             <FormControlLabel
+              key={location.name}
               control={
                 <Checkbox
                   name={location.name}
