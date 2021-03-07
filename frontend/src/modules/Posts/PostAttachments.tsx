@@ -36,50 +36,67 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 );
 
-interface AttachmentProps {
+interface AttachmentCardProps {
+  disabled: boolean;
   attachmentRef: string;
+  onDelete: () => void;
 }
 
-const Attachment = ({ attachmentRef }: AttachmentProps) => {
+const AttachmentCard = ({
+  disabled,
+  attachmentRef,
+  onDelete,
+}: AttachmentCardProps) => {
   const classes = useStyles();
   const storage = firebase.storage();
   const storageRef = storage.ref(attachmentRef);
+  const [loading, setLoading] = useState(true);
   const [attachmentURL, setAttachmentURL] = useState<string>();
+  const [attachmentMetadata, setAttachmentMetadata] = useState<any>();
+
+  const fileNameRef = attachmentMetadata?.customMetadata.fileName;
 
   useEffect(() => {
-    const getURL = async () => {
-      const url = await storageRef.getDownloadURL();
-      setAttachmentURL(url);
+    const getStorageData = async () => {
+      setAttachmentMetadata(await storageRef.getMetadata());
+      setAttachmentURL(await storageRef.getDownloadURL());
+      setLoading(false);
     };
 
-    getURL();
+    getStorageData();
   }, [storageRef]);
 
-  return attachmentURL ? (
+  const Actions = () =>
+    disabled ? (
+      <></>
+    ) : (
+      <CardActions>
+        <Button size="small" color="primary" onClick={onDelete}>
+          Delete
+        </Button>
+      </CardActions>
+    );
+
+  return loading ? (
+    <></>
+  ) : attachmentURL ? (
     <Card className={classes.root}>
       <CardActionArea>
         <CardMedia
           component="img"
-          alt="attachedFile"
+          alt={fileNameRef}
           height="140"
           image={attachmentURL}
-          title=""
+          title={fileNameRef}
         />
       </CardActionArea>
-      <CardActions>
-        <Button size="small" color="primary">
-          Delete
-        </Button>
-      </CardActions>
+      <CardContent>{fileNameRef}</CardContent>
+      <Actions />
     </Card>
   ) : (
     <Card className={classes.root}>
       <CardContent>Attachment not found</CardContent>
-      <CardActions>
-        <Button size="small" color="primary">
-          Delete
-        </Button>
-      </CardActions>
+      <Actions />
     </Card>
   );
 };
@@ -139,12 +156,17 @@ const PostAttachments = ({ disabled, post, setPost }: PostAttachmentsProps) => {
     }
   };
 
+  const removeFile = (index: number) => {
+    post.attachments.pop(index);
+
+    setPost({ ...post, attachments: [...post.attachments] });
+  };
+
   const onFileAttached = (e: React.ChangeEvent<HTMLInputElement>) => {
     const fileList = e.target.files;
 
     if (fileList) {
       setSelectedFile(fileList[0]);
-      console.log(fileList[0]);
     }
   };
 
@@ -163,9 +185,13 @@ const PostAttachments = ({ disabled, post, setPost }: PostAttachmentsProps) => {
         </AccordionSummary>
         <AccordionDetails>
           <Grid container spacing={2}>
-            {post.attachments?.map((item: string) => (
-              <Grid item>
-                <Attachment attachmentRef={item} />
+            {post.attachments?.map((item: string, index: number) => (
+              <Grid key={index} item>
+                <AttachmentCard
+                  disabled={disabled}
+                  onDelete={() => removeFile(index)}
+                  attachmentRef={item}
+                />
               </Grid>
             ))}
 
